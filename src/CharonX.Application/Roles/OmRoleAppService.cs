@@ -1,14 +1,16 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
+using Abp.Extensions;
+using Abp.Linq.Extensions;
 using CharonX.Authorization;
+using CharonX.Authorization.Roles;
 using CharonX.Roles.Dto;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.IdentityFramework;
-using CharonX.Authorization.Roles;
-using Microsoft.AspNetCore.Identity;
 
 namespace CharonX.Roles
 {
@@ -40,9 +42,20 @@ namespace CharonX.Roles
             throw new NotImplementedException();
         }
 
-        public Task<ListResultDto<RoleListDto>> GetAllRolesInTenantAsync(int tenantId, GetRolesInput input)
+        public async Task<ListResultDto<RoleListDto>> GetAllRolesInTenantAsync(int tenantId, GetRolesInput input)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var roles = await _roleManager
+                    .Roles
+                    .WhereIf(
+                        !input.Permission.IsNullOrWhiteSpace(),
+                        r => r.Permissions.Any(rp => rp.Name == input.Permission && rp.IsGranted)
+                    )
+                    .ToListAsync();
+
+                return new ListResultDto<RoleListDto>(ObjectMapper.Map<List<RoleListDto>>(roles));
+            }
         }
 
         public Task<RoleDto> UpdateRoleInTenantAsync(int tenantId, RoleDto input)

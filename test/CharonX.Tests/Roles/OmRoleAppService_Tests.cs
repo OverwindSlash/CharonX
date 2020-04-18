@@ -6,6 +6,7 @@ using CharonX.Roles.Dto;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -53,6 +54,51 @@ namespace CharonX.Tests.Roles
                 var testTenant = await context.Roles.FirstOrDefaultAsync(r => r.Id == roleDto.Id);
                 testTenant.TenantId.ShouldBe(tenantDto.Id);
             });
+        }
+
+        [Fact]
+        public async Task GetAllRolesInTenant_Test()
+        {
+            CreateTenantDto createTenantDto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(createTenantDto);
+
+            var createRoleDto1 = new CreateRoleDto()
+            {
+                Name = "Role1",
+                DisplayName = "Test role1",
+                Description = "Role1 for test",
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+            };
+            var role1Dto = await _omRoleAppService.CreateRoleInTenantAsync(tenantDto.Id, createRoleDto1);
+
+            var createRoleDto2 = new CreateRoleDto()
+            {
+                Name = "Role2",
+                DisplayName = "Test role2",
+                Description = "Role2 for test",
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Users }
+            };
+            var role2Dto = await _omRoleAppService.CreateRoleInTenantAsync(tenantDto.Id, createRoleDto2);
+
+            GetRolesInput input1 = new GetRolesInput()
+            {
+                Permission = string.Empty
+            };
+            var roles1 = await _omRoleAppService.GetAllRolesInTenantAsync(tenantDto.Id, input1);
+            roles1.Items.Count.ShouldBe(3);
+
+            GetRolesInput input2 = new GetRolesInput()
+            {
+                Permission = PermissionNames.Pages_Users
+            };
+            var roles2 = await _omRoleAppService.GetAllRolesInTenantAsync(tenantDto.Id, input2);
+            roles2.Items.Count.ShouldBe(2);
         }
     }
 }

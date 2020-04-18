@@ -53,7 +53,7 @@ namespace CharonX.Roles
 
         public async Task<ListResultDto<RoleListDto>> GetRolesAsync(GetRolesInput input)
         {
-            var roles = await _roleManager
+             var roles = await _roleManager
                 .Roles
                 .WhereIf(
                     !input.Permission.IsNullOrWhiteSpace(),

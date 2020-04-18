@@ -23,12 +23,12 @@ namespace CharonX.Tests.Roles
         [Fact]
         public async Task CreateRole_Test()
         {
-            CreateRoleDto createRoleDto = new CreateRoleDto()
+            var createRoleDto = new CreateRoleDto()
             {
                 Name = "RoleTest",
                 DisplayName = "Test role",
                 Description = "Role for test",
-                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+                GrantedPermissions = new List<string>() {PermissionNames.Pages_Roles}
             };
 
             var roleDto = await _roleAppService.CreateAsync(createRoleDto);
@@ -41,6 +41,42 @@ namespace CharonX.Tests.Roles
                 var testTenant = await context.Roles.FirstOrDefaultAsync(r => r.Id == roleDto.Id);
                 testTenant.TenantId.ShouldBe(1);
             });
+        }
+
+        [Fact]
+        public async Task GetRoles_Test()
+        {
+            var createRoleDto1 = new CreateRoleDto()
+            {
+                Name = "Role1",
+                DisplayName = "Test role1",
+                Description = "Role1 for test",
+                GrantedPermissions = new List<string>() {PermissionNames.Pages_Roles}
+            };
+            var role1Dto = await _roleAppService.CreateAsync(createRoleDto1);
+
+            var createRoleDto2 = new CreateRoleDto()
+            {
+                Name = "Role2",
+                DisplayName = "Test role2",
+                Description = "Role2 for test",
+                GrantedPermissions = new List<string>() {PermissionNames.Pages_Users}
+            };
+            var role2Dto = await _roleAppService.CreateAsync(createRoleDto2);
+
+            GetRolesInput input1 = new GetRolesInput()
+            {
+                Permission = string.Empty
+            };
+            var roles1 = await _roleAppService.GetRolesAsync(input1);
+            roles1.Items.Count.ShouldBe(3);     // + Admin Role
+
+            GetRolesInput input2 = new GetRolesInput()
+            {
+                Permission = PermissionNames.Pages_Users
+            };
+            var roles2 = await _roleAppService.GetRolesAsync(input2);
+            roles2.Items.Count.ShouldBe(2);     // Admin & Role2
         }
     }
 }
