@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
@@ -110,9 +111,12 @@ namespace CharonX.Web.Host.Startup
 
             app.UseAuthentication();
 
-            app.UseAbpRequestLocalization();
+            var cultureInfo = new CultureInfo("zh-Hans");
+            CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+            CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-          
+            //app.UseAbpRequestLocalization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<AbpCommonHub>("/signalr");

@@ -9,7 +9,8 @@ namespace CharonX.Roles
     {
         public Task<RoleDto> CreateRoleInTenantAsync(int tenantId, CreateRoleDto input);
         public Task<RoleDto> GetRoleInTenantAsync(int tenantId, EntityDto<int> input);
-        public Task<ListResultDto<RoleListDto>> GetAllRolesInTenantAsync(int tenantId, GetRolesInput input);
+        public Task<ListResultDto<RoleListDto>> GetRolesByPermissionInTenantAsync(int tenantId, GetRolesInput input);
+        public Task<PagedResultDto<RoleDto>> GetAllRolesInTenantAsync(int tenantId, PagedRoleResultRequestDto input);
         public Task<RoleDto> UpdateRoleInTenantAsync(int tenantId, RoleDto input);
         public Task DeleteRoleInTenantAsync(int tenantId, EntityDto<int> input);
     }

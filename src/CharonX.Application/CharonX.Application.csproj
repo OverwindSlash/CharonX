@@ -13,4 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CharonX.Core\CharonX.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Organizations\Dto\" />
+  </ItemGroup>
 </Project>

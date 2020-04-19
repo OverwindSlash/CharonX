@@ -4,6 +4,7 @@ using Abp.Authorization.Roles;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
+using Abp.IdentityFramework;
 using Abp.MultiTenancy;
 using Abp.Organizations;
 using Abp.Runtime.Caching;
@@ -15,7 +16,6 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.IdentityFramework;
 
 namespace CharonX.Authorization.Roles
 {
@@ -73,6 +73,33 @@ namespace CharonX.Authorization.Roles
                 .ToList();
 
             await SetGrantedPermissionsAsync(role, grantedPermissions);
+        }
+
+        public async Task UpdateRoleAndPermissionAsync(Role role, List<string> permissions)
+        {
+            await ResetAllPermissionsAsync(role);
+
+            CheckErrors(await UpdateAsync(role));
+
+            var grantedPermissions = _permissionManager.GetAllPermissions()
+                .Where(p => permissions.Contains(p.Name))
+                .ToList();
+
+            await SetGrantedPermissionsAsync(role, grantedPermissions);
+        }
+
+        public async Task DeleteRoleAndDetachUserAsync(Role role)
+        {
+            UserManager userManager = _iocManager.Resolve<UserManager>();
+
+            var users = await userManager.GetUsersInRoleAsync(role.NormalizedName);
+
+            foreach (var user in users)
+            {
+                CheckErrors(await userManager.RemoveFromRoleAsync(user, role.NormalizedName));
+            }
+
+            CheckErrors(await DeleteAsync(role));
         }
 
         protected virtual void CheckErrors(IdentityResult identityResult)

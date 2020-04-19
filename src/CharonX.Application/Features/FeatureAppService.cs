@@ -41,8 +41,6 @@ namespace CharonX.Features
             _tenantManager = tenantManager;
             _roleManager = roleManager;
             _authorizationConfiguration = authorizationConfiguration;
-
-            LocalizationSourceName = "CharonX";
         }
 
         public List<FeatureDto> ListAllFeatures()
@@ -114,21 +112,7 @@ namespace CharonX.Features
 
         public async Task<ListResultDto<PermissionDto>> GetTenantPermissionsAsync(int tenantId)
         {
-            Tenant tenant = null;
-
-            try
-            {
-                tenant = await _tenantManager.GetByIdAsync(tenantId);
-            }
-            catch (AbpException abpException)
-            {
-                throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId), abpException);
-            }
-
-            if (!tenant.IsActive)
-            {
-                throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
-            }
+            Tenant tenant = await _tenantManager.GetAvailableTenantById(tenantId);
 
             using (CurrentUnitOfWork.SetTenantId(tenantId))
             {

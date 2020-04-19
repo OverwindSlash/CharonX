@@ -11,7 +11,7 @@ namespace CharonX.Features
     {
         public static string SmartSecurityFeature = "SmartSecurityFeature";
         public static string SmartPassFeature = "SmartPassFeature";
-        public static string SourceName = "CharonX";
+        public static string SourceName = CharonXConsts.LocalizationSourceName;
 
         private readonly ILocalizationManager _localizationManager;
 

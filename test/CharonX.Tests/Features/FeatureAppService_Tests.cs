@@ -1,10 +1,10 @@
 ﻿using CharonX.Features;
 using CharonX.Features.Dto;
+using CharonX.MultiTenancy;
+using CharonX.MultiTenancy.Dto;
 using Shouldly;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CharonX.MultiTenancy;
-using CharonX.MultiTenancy.Dto;
 using Xunit;
 
 namespace CharonX.Tests.Features
