@@ -7,5 +7,7 @@ namespace CharonX.Sessions
     public interface ISessionAppService : IApplicationService
     {
         Task<GetCurrentLoginInformationsOutput> GetCurrentLoginInformations();
+
+        Task<GetCurrentLoginInformationsForAppOutput> GetCurrentLoginInformationsForApp();
     }
 }

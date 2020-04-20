@@ -28,6 +28,7 @@ namespace CharonX.EntityFrameworkCore.Seed.Tenants
             if (defaultTenant == null)
             {
                 defaultTenant = new Tenant(AbpTenantBase.DefaultTenantName, AbpTenantBase.DefaultTenantName);
+                defaultTenant.AdminPhoneNumber = string.Empty;
 
                 var defaultEdition = _context.Editions.IgnoreQueryFilters().FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName);
                 if (defaultEdition != null)

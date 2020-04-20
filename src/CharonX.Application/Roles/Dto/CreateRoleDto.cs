@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using Abp.Authorization.Roles;
 using CharonX.Authorization.Roles;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace CharonX.Roles.Dto
 {

@@ -16,6 +16,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Update="Avatar\user.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Dockerfile">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
