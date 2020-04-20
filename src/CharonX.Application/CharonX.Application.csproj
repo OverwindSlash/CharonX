@@ -12,8 +12,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CharonX.Core\CharonX.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Organizations\Dto\" />
+    <ProjectReference Include="..\CharonX.EntityFrameworkCore\CharonX.EntityFrameworkCore.csproj" />
   </ItemGroup>
 </Project>
