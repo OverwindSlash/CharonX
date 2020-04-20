@@ -35,6 +35,7 @@ namespace CharonX.Tests.Organizations
             await UsingDbContextAsync(async context =>
             {
                 var testOu = await context.OrganizationUnits.FirstOrDefaultAsync(ou => ou.Id == orgUnitDto.Id);
+                testOu.TenantId = 1;
                 testOu.DisplayName.ShouldBe("Ou Test");
                 testOu.Code.ShouldBe("00001");
             });
@@ -67,8 +68,8 @@ namespace CharonX.Tests.Organizations
             });
 
             var result = await _orgUnitAppService.GetAsync(new EntityDto<long>(orgUnitDto1.Id));
-            result.DisplayName.ShouldBe("Ou Test");
-            result.Code.ShouldBe("00001");
+            result.DisplayName.ShouldBe("Ou Test1");
+            result.Code.ShouldBe("00002");
         }
     }
 }

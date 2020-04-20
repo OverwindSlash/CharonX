@@ -24,6 +24,7 @@ namespace CharonX.Organizations
         public async Task<OrgUnitDto> CreateAsync(CreateOrgUnitDto input)
         {
             var orgUnit = ObjectMapper.Map<OrganizationUnit>(input);
+            orgUnit.TenantId = GetCurrentTenantId();
 
             await _orgUnitManager.CreateAsync(orgUnit);
             await CurrentUnitOfWork.SaveChangesAsync();
@@ -36,6 +37,16 @@ namespace CharonX.Organizations
             var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.Id == input.Id);
 
             return ObjectMapper.Map<OrgUnitDto>(orgUnit);
+        }
+
+        private int? GetCurrentTenantId()
+        {
+            if (CurrentUnitOfWork != null)
+            {
+                return CurrentUnitOfWork.GetTenantId();
+            }
+
+            return AbpSession.TenantId;
         }
     }
 }
