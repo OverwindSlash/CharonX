@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Abp.Authorization.Users;
 using Abp.Extensions;
 
@@ -9,6 +10,9 @@ namespace CharonX.Authorization.Users
     {
         public const string DefaultPassword = "123qwe";
         public const string DefaultEmailDomain = "@pensees.ai";
+        public const int MaxGenderLength = 2;
+        public const int MaxIdNumberLength = 18;
+        public const int MaxCityLength = 10;
 
         public static string CreateRandomPassword()
         {
@@ -31,5 +35,19 @@ namespace CharonX.Authorization.Users
 
             return user;
         }
+
+        [StringLength(AbpUserBase.MaxPhoneNumberLength)]
+        public string OfficePhoneNumber { get; set; }
+
+        [MaxLength(MaxGenderLength)]
+        public string Gender { get; set; }
+
+        [StringLength(MaxIdNumberLength)]
+        public string IdNumber { get; set; }
+
+        [MaxLength(MaxCityLength)]
+        public string City { get; set; }
+
+        public DateTime ExpireDate { get; set; }
     }
 }

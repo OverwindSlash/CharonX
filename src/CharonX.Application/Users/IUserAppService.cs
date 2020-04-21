@@ -13,5 +13,7 @@ namespace CharonX.Users
         Task ChangeLanguage(ChangeUserLanguageDto input);
 
         Task<bool> ChangePassword(ChangePasswordDto input);
+
+        Task<bool> ActivateUser(ActivateUserDto input);
     }
 }

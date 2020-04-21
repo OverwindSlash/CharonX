@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
+using Abp.Authorization.Users;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
@@ -27,6 +29,7 @@ namespace CharonX.Users
     [AbpAuthorize(PermissionNames.Pages_Users)]
     public class UserAppService : AsyncCrudAppService<User, UserDto, long, PagedUserResultRequestDto, CreateUserDto, UserDto>, IUserAppService
     {
+        private readonly IRepository<User, long> _repository;
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
         private readonly IRepository<Role> _roleRepository;
@@ -44,6 +47,7 @@ namespace CharonX.Users
             LogInManager logInManager)
             : base(repository)
         {
+            _repository = repository;
             _userManager = userManager;
             _roleManager = roleManager;
             _roleRepository = roleRepository;
@@ -65,14 +69,23 @@ namespace CharonX.Users
 
             CheckErrors(await _userManager.CreateAsync(user, input.Password));
 
-            if (input.RoleNames != null)
+            if (input.OrgUnitNames != null)
             {
-                CheckErrors(await _userManager.SetRolesAsync(user, input.RoleNames));
+                CheckErrors(await _userManager.AddToOrgUnitsAsync(user, input.OrgUnitNames));
+                CurrentUnitOfWork.SaveChanges();
             }
 
-            CurrentUnitOfWork.SaveChanges();
+            var alreadyInRoles = await _userManager.GetRolesAsync(user);
+            if (input.RoleNames != null)
+            {
+                foreach (var roleName in input.RoleNames.Where(roleName => !alreadyInRoles.Contains(roleName)))
+                {
+                    await _userManager.AddToRoleAsync(user, roleName);
+                }
+                CurrentUnitOfWork.SaveChanges();
+            }
 
-            return MapToEntityDto(user);
+            return await MapToEntityDtoAsync(user);
         }
 
         public override async Task<UserDto> UpdateAsync(UserDto input)
@@ -81,7 +94,7 @@ namespace CharonX.Users
 
             var user = await _userManager.GetUserByIdAsync(input.Id);
 
-            MapToEntity(input, user);
+            MapToEntity(input, user);   
 
             CheckErrors(await _userManager.UpdateAsync(user));
 
@@ -127,14 +140,24 @@ namespace CharonX.Users
             user.SetNormalizedNames();
         }
 
-        protected override UserDto MapToEntityDto(User user)
+        protected async Task<UserDto> MapToEntityDtoAsync(User user)
         {
-            var roleIds = user.Roles.Select(x => x.RoleId).ToArray();
-
-            var roles = _roleManager.Roles.Where(r => roleIds.Contains(r.Id)).Select(r => r.NormalizedName);
-
             var userDto = base.MapToEntityDto(user);
+
+            var orgUnits = _userManager.GetOrganizationUnits(user)
+                .Select(ou => ou.DisplayName).ToList();
+            userDto.OrgUnitNames = orgUnits.ToArray();
+
+            var roles = await _userManager.GetRolesAsync(user);
             userDto.RoleNames = roles.ToArray();
+
+            List<Permission> permissions = new List<Permission>();
+            foreach (string roleName in roles)
+            {
+                permissions.AddRange(await _roleManager.GetGrantedPermissionsAsync(roleName));
+            }
+            permissions = permissions.Distinct().ToList();
+            userDto.Permissions = permissions.Select(p => p.Name).ToArray();
 
             return userDto;
         }
@@ -188,6 +211,11 @@ namespace CharonX.Users
             user.Password = _passwordHasher.HashPassword(user, input.NewPassword);
             CurrentUnitOfWork.SaveChanges();
             return true;
+        }
+
+        public Task<bool> ActivateUser(ActivateUserDto input)
+        {
+            throw new System.NotImplementedException();
         }
 
         public async Task<bool> ResetPassword(ResetPasswordDto input)
