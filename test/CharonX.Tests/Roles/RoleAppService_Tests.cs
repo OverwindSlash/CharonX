@@ -167,8 +167,8 @@ namespace CharonX.Tests.Roles
                 Description = "Role for test",
                 GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
             };
-
             var roleDto = await _roleAppService.CreateAsync(createRoleDto);
+
             await UsingDbContextAsync(async context =>
             {
                 var testTenant = await context.Roles.FirstOrDefaultAsync(r => r.Id == roleDto.Id);

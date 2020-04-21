@@ -100,6 +100,8 @@
     <text name="EditTenant">编辑租户</text>
     <text name="SearchWithThreeDot">搜索...</text>
 
+    <text name="OrgUnitNotFound">组织单元 {0} 不存在.</text>
+
     <text name="SmartSecurityFeature">智慧安防功能包</text>
     <text name="SmartPassFeature">智慧通行功能包</text>
   </texts>
