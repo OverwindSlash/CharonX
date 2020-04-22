@@ -5,17 +5,17 @@ using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Abp.Organizations;
 using CharonX.Authorization;
-using CharonX.Authorization.Roles;
 using CharonX.Organizations;
 using CharonX.Organizations.Dto;
 using CharonX.Roles;
 using CharonX.Roles.Dto;
 using Xunit;
+using Abp.Domain.Repositories;
+using CharonX.Authorization.Roles;
 
 namespace CharonX.Tests.Users
 {
@@ -290,16 +290,40 @@ namespace CharonX.Tests.Users
                 RoleNames = new[] { "Role1" },
                 OrgUnitNames = new[] { "Ou Test" }
             };
+            var userDto = await _userAppService.CreateAsync(createUserDto);            
 
             UserManager userManager = Resolve<UserManager>();
-            OrganizationUnitManager orgUnitManager = Resolve<OrganizationUnitManager>();
+            IRepository<Role> roleRepository = Resolve<IRepository<Role>>();
+            IRepository<OrganizationUnit, long> ouRepository = Resolve<IRepository<OrganizationUnit, long>>();
 
-            var userDto = await _userAppService.CreateAsync(createUserDto);
+            var user = await userManager.GetUserByIdAsync(userDto.Id);
+            var ou = await ouRepository.GetAsync(1);
+            var role1 = await roleRepository.GetAsync(3);
+            var role2 = await roleRepository.GetAsync(4);
 
-            var usersInRoleBefore = (List<User>)await userManager.GetUsersInRoleAsync("Role1");
-            usersInRoleBefore.Count.ShouldBe(1);
-            
+            var role = await roleRepository.FirstOrDefaultAsync(r => r.NormalizedName == role1.NormalizedName);
+
+            var query = from userrole in _userRoleRepository.GetAll()
+                        join user in UserRepository.GetAll() on userrole.UserId equals user.Id
+                        where userrole.RoleId.Equals(role.Id)
+                        select user;
+
+            //var userInRoleBefore = await userManager.IsInRoleAsync(user, role1.Name);
+            //userInRoleBefore.ShouldBeTrue();
+
+            var userInOrgUnitBefore = await userManager.GetUsersInOrganizationUnitAsync(ou);
+            userInOrgUnitBefore.Count.ShouldBe(1);
+
+            var userInRoleBefore = await userManager.GetUsersInRoleAsync(role1.NormalizedName);
+            userInRoleBefore.Count.ShouldBe(1);
+
             await _userAppService.DeleteAsync(new EntityDto<long>(userDto.Id));
+
+            //var userInRoleAfter = await userManager.IsInRoleAsync(user, "Role1");
+            //userInRoleAfter.ShouldBeFalse();
+
+            var userInOrgUnitAfter = await userManager.GetUsersInOrganizationUnitAsync(ou);
+            userInOrgUnitAfter.Count.ShouldBe(0);
 
             var usersInRoleAfter = (List<User>)await userManager.GetUsersInRoleAsync("Role1");
             usersInRoleAfter.Count.ShouldBe(0);
