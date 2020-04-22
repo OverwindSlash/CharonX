@@ -2,6 +2,8 @@
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using CharonX.Authorization;
+using CharonX.Authorization.Users;
+using CharonX.Users.Dto;
 
 namespace CharonX
 {
@@ -13,6 +15,14 @@ namespace CharonX
         public override void PreInitialize()
         {
             Configuration.Authorization.Providers.Add<CharonXAuthorizationProvider>();
+
+            // Ignore permission member when mapping UserDto to User
+            Configuration.Modules.AbpAutoMapper().Configurators.Add(config =>
+            {
+                config.CreateMap<UserDto, User>()
+                    .ForMember(t => t.Permissions,
+                        options => options.Ignore());
+            });
         }
 
         public override void Initialize()

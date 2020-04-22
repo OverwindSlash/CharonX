@@ -1,12 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
-using Abp.Authorization.Users;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
@@ -23,6 +18,10 @@ using CharonX.Roles.Dto;
 using CharonX.Users.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace CharonX.Users
 {
@@ -54,6 +53,8 @@ namespace CharonX.Users
             _passwordHasher = passwordHasher;
             _abpSession = abpSession;
             _logInManager = logInManager;
+
+            LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
 
         public override async Task<UserDto> CreateAsync(CreateUserDto input)
@@ -67,25 +68,86 @@ namespace CharonX.Users
 
             await _userManager.InitializeOptionsAsync(AbpSession.TenantId);
 
+            await CheckDuplicatedPhoneNumber(user);
+
             CheckErrors(await _userManager.CreateAsync(user, input.Password));
 
+            // Set organization units and roles belongs to them
             if (input.OrgUnitNames != null)
             {
-                CheckErrors(await _userManager.AddToOrgUnitsAsync(user, input.OrgUnitNames));
+                CheckErrors(await _userManager.SetOrgUnitsAsync(user, input.OrgUnitNames));
                 CurrentUnitOfWork.SaveChanges();
             }
 
-            var alreadyInRoles = await _userManager.GetRolesAsync(user);
+            // Add additional roles not included in organization units
             if (input.RoleNames != null)
             {
-                foreach (var roleName in input.RoleNames.Where(roleName => !alreadyInRoles.Contains(roleName)))
-                {
-                    await _userManager.AddToRoleAsync(user, roleName);
-                }
+                CheckErrors(await _userManager.AddToAdditionalRolesAsync(user, input.RoleNames));
                 CurrentUnitOfWork.SaveChanges();
             }
 
-            return await MapToEntityDtoAsync(user);
+            return await GetAsync(new EntityDto<long>(user.Id));
+        }
+
+        
+
+        private async Task CheckDuplicatedPhoneNumber(User user)
+        {
+            if (await _userManager.CheckDuplicateMobilePhoneAsync(user.PhoneNumber))
+            {
+                throw new UserFriendlyException(L("PhoneNumberDuplicated", user.PhoneNumber));
+            }
+        }
+
+        public override async Task<UserDto> GetAsync(EntityDto<long> input)
+        {
+            try
+            {
+                var user = await _userManager.GetUserByIdAsync(input.Id);
+                var userDto = ObjectMapper.Map<UserDto>(user);
+
+                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await GetRolesOfUserAsync(user);
+                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+
+                return userDto;
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(L("UserNotFound", input.Id), exception);
+            }
+        }
+
+        private async Task<string[]> GetOrgUnitsOfUserAsync(User user)
+        {
+            var orgUnits = await _userManager.GetOrganizationUnitsAsync(user);
+            return orgUnits.Select(ou => ou.DisplayName).ToArray();
+        }
+
+        private async Task<string[]> GetRolesOfUserAsync(User user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            return roles.ToArray();
+        }
+
+        private async Task<string[]> GetPermissionsOfUserAsync(User user)
+        {
+            var permissions = await _userManager.GetGrantedPermissionsAsync(user);
+            return permissions.Select(p => p.Name).ToArray();
+        }
+
+        public override async Task<PagedResultDto<UserDto>> GetAllAsync(PagedUserResultRequestDto input)
+        {
+            var pagedResult = await base.GetAllAsync(input);
+            foreach (var userDto in pagedResult.Items)
+            {
+                var user = await _userManager.GetUserByIdAsync(userDto.Id);
+                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await GetRolesOfUserAsync(user);
+                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+            }
+
+            return pagedResult;
         }
 
         public override async Task<UserDto> UpdateAsync(UserDto input)
@@ -94,16 +156,30 @@ namespace CharonX.Users
 
             var user = await _userManager.GetUserByIdAsync(input.Id);
 
+            if (input.PhoneNumber != user.PhoneNumber)
+            {
+                await CheckDuplicatedPhoneNumber(user);
+            }
+
             MapToEntity(input, user);   
 
             CheckErrors(await _userManager.UpdateAsync(user));
 
-            if (input.RoleNames != null)
+            // Set organization units and roles belongs to them
+            if (input.OrgUnitNames != null)
             {
-                CheckErrors(await _userManager.SetRolesAsync(user, input.RoleNames));
+                CheckErrors(await _userManager.SetOrgUnitsAsync(user, input.OrgUnitNames));
+                CurrentUnitOfWork.SaveChanges();
             }
 
-            return await GetAsync(input);
+            // Add additional roles not included in organization units
+            if (input.RoleNames != null)
+            {
+                CheckErrors(await _userManager.AddToAdditionalRolesAsync(user, input.RoleNames));
+                CurrentUnitOfWork.SaveChanges();
+            }
+
+            return await GetAsync(new EntityDto<long>(user.Id));
         }
 
         public override async Task DeleteAsync(EntityDto<long> input)
@@ -136,30 +212,19 @@ namespace CharonX.Users
 
         protected override void MapToEntity(UserDto input, User user)
         {
-            ObjectMapper.Map(input, user);
+            //ObjectMapper.Map(input, user);
+            user.Name = input.Name;
+            user.Surname = input.Surname;
+            user.Gender = input.Gender;
+            user.IdNumber = input.IdNumber;
+            user.PhoneNumber = input.PhoneNumber;
+            user.OfficePhoneNumber = input.OfficePhoneNumber;
+            user.City = input.City;
+            user.ExpireDate = input.ExpireDate;
+            user.EmailAddress = input.EmailAddress;
+            user.IsActive = input.IsActive;
+            
             user.SetNormalizedNames();
-        }
-
-        protected async Task<UserDto> MapToEntityDtoAsync(User user)
-        {
-            var userDto = base.MapToEntityDto(user);
-
-            var orgUnits = _userManager.GetOrganizationUnits(user)
-                .Select(ou => ou.DisplayName).ToList();
-            userDto.OrgUnitNames = orgUnits.ToArray();
-
-            var roles = await _userManager.GetRolesAsync(user);
-            userDto.RoleNames = roles.ToArray();
-
-            List<Permission> permissions = new List<Permission>();
-            foreach (string roleName in roles)
-            {
-                permissions.AddRange(await _roleManager.GetGrantedPermissionsAsync(roleName));
-            }
-            permissions = permissions.Distinct().ToList();
-            userDto.Permissions = permissions.Select(p => p.Name).ToArray();
-
-            return userDto;
         }
 
         protected override IQueryable<User> CreateFilteredQuery(PagedUserResultRequestDto input)

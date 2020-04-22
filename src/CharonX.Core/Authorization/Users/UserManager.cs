@@ -3,6 +3,7 @@ using Abp.Authorization.Users;
 using Abp.Configuration;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
+using Abp.IdentityFramework;
 using Abp.Organizations;
 using Abp.Runtime.Caching;
 using CharonX.Authorization.Roles;
@@ -20,6 +21,7 @@ namespace CharonX.Authorization.Users
     public class UserManager : AbpUserManager<Role, User>
     {
         private readonly RoleManager _roleManager;
+        private readonly UserStore _store;
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
         private readonly IRepository<UserOrganizationUnit, long> _userOrganizationUnitRepository;
         private readonly IOrganizationUnitSettings _organizationUnitSettings;
@@ -62,52 +64,46 @@ namespace CharonX.Authorization.Users
                 settingManager)
         {
             _roleManager = roleManager;
+            _store = store;
             _orgUnitRepository = organizationUnitRepository;
             _userOrganizationUnitRepository = userOrganizationUnitRepository;
             _organizationUnitSettings = organizationUnitSettings;
+
+            LocalizationSourceName = "CharonX";
         }
 
-        public async Task<IdentityResult> AddToOrgUnitsAsync(User user, string[] orgUnitNames)
+        public async Task<IdentityResult> SetOrgUnitsAsync(User user, string[] orgUnitNames)
         {
             if (user == null || orgUnitNames == null)
             {
                 return IdentityResult.Failed();
             }
 
-            var ous = _orgUnitRepository.GetAll()
+            var organizationUnits = _orgUnitRepository.GetAll()
                 .Where(ou => orgUnitNames.Contains(ou.DisplayName)).ToList();
 
-            foreach (OrganizationUnit ou in ous)
-            {
-                await AddToOrganizationUnitAsync(user, ou);
-            }
+            await this.SetOrganizationUnitsAsync(user, organizationUnits.Select(ou => ou.Id).ToArray());
+
+            //foreach (OrganizationUnit ou in ous)
+            //{
+            //    await AddToOrganizationUnitAsync(user, ou);
+            //}
 
             return IdentityResult.Success;
         }
 
-        public async Task<List<string>> GetRolesInOrgUnitsAsync(string[] orgUnitNames)
+        public async Task<IdentityResult> AddToAdditionalRolesAsync(User user, string[] roleNames)
         {
-            List<string> roleNames = new List<string>();
+            var alreadyInRoles = await GetRolesAsync(user);
 
-            var organizationUnits = await _orgUnitRepository.GetAll()
-                .Where(ou => orgUnitNames.Contains(ou.DisplayName)).ToListAsync();
+            var roles = roleNames.Where(roleName => !alreadyInRoles.Contains(roleName)).ToArray();
 
-            foreach (var orgUnit in organizationUnits)
-            {
-                var roles = await _roleManager.GetRolesInOrganizationUnit(orgUnit);
+            return await AddToRolesAsync(user, roles);
+        }
 
-                foreach (Role role in roles)
-                {
-                    if (roleNames.Contains(role.Name))
-                    {
-                        continue;
-                    }
-
-                    roleNames.Add(role.Name);
-                }
-            }
-
-            return roleNames;
+        public async Task<bool> CheckDuplicateMobilePhoneAsync(string phoneNumber)
+        {
+            return await _store.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
         }
     }
 }

@@ -7,7 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Application.Services.Dto;
+using Abp.Organizations;
 using CharonX.Authorization;
+using CharonX.Authorization.Roles;
 using CharonX.Organizations;
 using CharonX.Organizations.Dto;
 using CharonX.Roles;
@@ -68,7 +71,62 @@ namespace CharonX.Tests.Users
         }
 
         [Fact]
+        public async Task CreateUser_DuplicatedPhone_Test()
+        {
+            CreateUserDto createUser1Dto = new CreateUserDto()
+            {
+                UserName = "TestUser1",
+                Password = User.DefaultPassword,
+                Name = "Test",
+                Surname = "User",
+                PhoneNumber = "13851400000"
+            };
+            var user1Dto = await _userAppService.CreateAsync(createUser1Dto);
+
+            CreateUserDto createUser2Dto = new CreateUserDto()
+            {
+                UserName = "TestUser2",
+                Password = User.DefaultPassword,
+                Name = "Test",
+                Surname = "User",
+                PhoneNumber = "13851400000"
+            };
+            try
+            {
+                var user2Dto = await _userAppService.CreateAsync(createUser2Dto);
+            }
+            catch (Exception exception)
+            {
+                exception.Message.ShouldBe("Phone number " + createUser2Dto.PhoneNumber + " duplicated.");
+            }
+        }
+
+        [Fact]
         public async Task CreateUser_WithRoleAndOrgUnit_Test()
+        {
+            await CreateComplexRoleAndOrgUnit();
+
+            // Create user with role and orgunit (orgunit contain role)
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400000",
+                RoleNames = new[] { "Role1" },
+                OrgUnitNames = new[] { "Ou Test" }
+            };
+
+            var userDto = await _userAppService.CreateAsync(createUserDto);
+
+            userDto.FullName.ShouldBe("John Smith");
+            userDto.OrgUnitNames.Length.ShouldBe(1);
+            userDto.RoleNames.Length.ShouldBe(2);
+            userDto.Permissions.Length.ShouldBe(2);
+        }
+
+        private async Task CreateComplexRoleAndOrgUnit()
         {
             // Role 1
             var createRole1Dto = new CreateRoleDto()
@@ -76,7 +134,7 @@ namespace CharonX.Tests.Users
                 Name = "Role1",
                 DisplayName = "Role1",
                 Description = "Role1 for test",
-                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+                GrantedPermissions = new List<string>() {PermissionNames.Pages_Roles}
             };
             var role1Dto = await _roleAppService.CreateAsync(createRole1Dto);
 
@@ -86,9 +144,19 @@ namespace CharonX.Tests.Users
                 Name = "Role2",
                 DisplayName = "Role2",
                 Description = "Role2 for test",
-                GrantedPermissions = new List<string>() { PermissionNames.Pages_Users, PermissionNames.Pages_Tenants }
+                GrantedPermissions = new List<string>() {PermissionNames.Pages_Users, PermissionNames.Pages_Roles}
             };
             var role2Dto = await _roleAppService.CreateAsync(createRole2Dto);
+
+            // Role 2
+            var createRole3Dto = new CreateRoleDto()
+            {
+                Name = "Role3",
+                DisplayName = "Role3",
+                Description = "Role3 for test",
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+            };
+            var role3Dto = await _roleAppService.CreateAsync(createRole3Dto);
 
             // OrgUnit with Role1 and Role2
             CreateOrgUnitDto createOrgUnitDto = new CreateOrgUnitDto()
@@ -111,6 +179,12 @@ namespace CharonX.Tests.Users
                 RoleId = role2Dto.Id
             };
             await _orgUnitAppService.AddRoleToOrgUnitAsync(setOrgUnitRole2Dto);
+        }
+
+        [Fact]
+        public async Task GetUser_Test()
+        {
+            await CreateComplexRoleAndOrgUnit();
 
             // Create user with role and orgunit (orgunit contain role)
             CreateUserDto createUserDto = new CreateUserDto()
@@ -120,22 +194,116 @@ namespace CharonX.Tests.Users
                 Name = "John",
                 Surname = "Smith",
                 PhoneNumber = "13851400000",
-                RoleNames = new [] { "Role1" },
-                OrgUnitNames = new [] { "Ou Test" }
+                RoleNames = new[] { "Role1" },
+                OrgUnitNames = new[] { "Ou Test" }
             };
 
             var userDto = await _userAppService.CreateAsync(createUserDto);
 
-            await UsingDbContextAsync(async context =>
+            var getUserDto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUserDto.FullName.ShouldBe("John Smith");
+            getUserDto.OrgUnitNames.Length.ShouldBe(1);
+            getUserDto.RoleNames.Length.ShouldBe(2);
+            getUserDto.Permissions.Length.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task GetAllUsers_Test()
+        {
+            await CreateComplexRoleAndOrgUnit();
+
+            int userCount = 50;
+            for (int i = 10; i < userCount; i++)
             {
-                var user = await context.Users
-                    .Include(u => u.Roles)
-                    .Include(u => u.Permissions)
-                    .FirstOrDefaultAsync(u => u.Id == userDto.Id);
-                user.Roles.Count.ShouldBe(2);
-                user.Permissions.Count.ShouldBe(3);
-                var permissions = user.Permissions.ToList();
-            });
+                CreateUserDto createUserDto = new CreateUserDto()
+                {
+                    UserName = $"TestUser{i,2}",
+                    Password = User.DefaultPassword,
+                    Name = $"Test{i,2}",
+                    Surname = $"User{i,2}",
+                    PhoneNumber = $"138514000{i,2}",
+                    RoleNames = new[] { "Role1" },
+                    OrgUnitNames = new[] { "Ou Test" }
+                };
+                var userDto = await _userAppService.CreateAsync(createUserDto);
+            }
+
+            PagedUserResultRequestDto input = new PagedUserResultRequestDto()
+            {
+                IsActive = false,
+                Keyword = string.Empty,
+                SkipCount = 17,
+                MaxResultCount = 6
+            };
+
+            var users = await _userAppService.GetAllAsync(input);
+            users.Items.Count.ShouldBe(6);
+            users.Items[0].UserName.ShouldBe("TestUser27");
+            users.Items[0].OrgUnitNames.Length.ShouldBe(1);
+            users.Items[0].RoleNames.Length.ShouldBe(2);
+            users.Items[0].Permissions.Length.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task UpdateUsers_Test()
+        {
+            await CreateComplexRoleAndOrgUnit();
+
+            // Create user with role and orgunit (orgunit contain role)
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400000",
+                RoleNames = new[] { "Role1" },
+                OrgUnitNames = new[] { "Ou Test" }
+            };
+
+            var userDto = await _userAppService.CreateAsync(createUserDto);
+
+            var getUserDto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUserDto.Name = "Johnny";
+            getUserDto.RoleNames = new string[] { "Role3" };
+
+            var updatedUser = await _userAppService.UpdateAsync(getUserDto);
+            updatedUser.FullName.ShouldBe("Johnny Smith");
+            updatedUser.OrgUnitNames.Length.ShouldBe(1);
+            updatedUser.RoleNames.Length.ShouldBe(3);
+            updatedUser.Permissions.Length.ShouldBe(2);
+        }
+
+        [Fact]
+        public async Task DeleteUser_Test()
+        {
+            await CreateComplexRoleAndOrgUnit();
+
+            // Create user with role and orgunit (orgunit contain role)
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400000",
+                RoleNames = new[] { "Role1" },
+                OrgUnitNames = new[] { "Ou Test" }
+            };
+
+            UserManager userManager = Resolve<UserManager>();
+            OrganizationUnitManager orgUnitManager = Resolve<OrganizationUnitManager>();
+
+            var userDto = await _userAppService.CreateAsync(createUserDto);
+
+            var usersInRoleBefore = (List<User>)await userManager.GetUsersInRoleAsync("Role1");
+            usersInRoleBefore.Count.ShouldBe(1);
+            
+            await _userAppService.DeleteAsync(new EntityDto<long>(userDto.Id));
+
+            var usersInRoleAfter = (List<User>)await userManager.GetUsersInRoleAsync("Role1");
+            usersInRoleAfter.Count.ShouldBe(0);
+
         }
     }
 }

@@ -104,8 +104,10 @@
     <text name="UserDeleteWarningMessage">User {0} will be deleted.</text>
     <text name="RoleDeleteWarningMessage">Role {0} will be deleted and unassigned from all assigned users.</text>
     <text name="RoleNotFound">Role {0} not found.</text>
+    <text name="UserNotFound">User {0} not found.</text>
     <text name="OrgUnitNotFound">Organization Unit {0} not found.</text>
     <text name="TenantDeleteWarningMessage">Tenant {0} will be deleted.</text>
+    <text name="PhoneNumberDuplicated">Phone number {0} duplicated.</text>
     <text name="SearchWithThreeDot">Search...</text>
     <text name="SmartSecurityFeature">Smart security feature</text>
     <text name="SmartPassFeature">Smart pass feature</text>

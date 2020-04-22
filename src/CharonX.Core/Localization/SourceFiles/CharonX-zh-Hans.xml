@@ -101,6 +101,8 @@
     <text name="SearchWithThreeDot">搜索...</text>
 
     <text name="OrgUnitNotFound">组织单元 {0} 不存在.</text>
+    <text name="UserNotFound">用户 {0} 不存在.</text>
+    <text name="PhoneNumberDuplicated">手机号 {0} 已存在.</text>
 
     <text name="SmartSecurityFeature">智慧安防功能包</text>
     <text name="SmartPassFeature">智慧通行功能包</text>
