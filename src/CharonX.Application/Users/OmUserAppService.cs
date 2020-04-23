@@ -20,6 +20,8 @@ namespace CharonX.Users
             UserManager userManager)
         {
             _userManager = userManager;
+
+            LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
 
         public async Task<UserDto> CreateUserInTenantAsync(int tenantId, CreateUserDto input)
