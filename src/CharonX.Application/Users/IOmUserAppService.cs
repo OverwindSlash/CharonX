@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using CharonX.Users.Dto;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CharonX.Users
 {
-    public interface IOmUserAppService
+    public interface IOmUserAppService : IApplicationService
     {
         public Task<UserDto> CreateUserInTenantAsync(int tenantId, CreateUserDto input);
         public Task<UserDto> CreateAdminUserInTenantAsync(int tenantId, CreateUserDto input);
