@@ -1,14 +1,19 @@
-using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using CharonX.Roles.Dto;
 using CharonX.Users.Dto;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CharonX.Users
 {
     public interface IUserAppService : IAsyncCrudAppService<UserDto, long, PagedUserResultRequestDto, CreateUserDto, UserDto>
     {
-        Task<ListResultDto<RoleDto>> GetRoles();
+        Task<List<UserDto>> GetUsersInRoleAsync(string roleName);
+
+        Task<List<UserDto>> GetUsersInOrgUnitAsync(string orgUnitName, bool includeChildren = false);
+
+        //Task<ListResultDto<RoleDto>> GetRoles();
 
         Task ChangeLanguage(ChangeUserLanguageDto input);
 

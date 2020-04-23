@@ -84,11 +84,6 @@ namespace CharonX.Authorization.Users
 
             await this.SetOrganizationUnitsAsync(user, organizationUnits.Select(ou => ou.Id).ToArray());
 
-            //foreach (OrganizationUnit ou in ous)
-            //{
-            //    await AddToOrganizationUnitAsync(user, ou);
-            //}
-
             return IdentityResult.Success;
         }
 
@@ -104,6 +99,19 @@ namespace CharonX.Authorization.Users
         public async Task<bool> CheckDuplicateMobilePhoneAsync(string phoneNumber)
         {
             return await _store.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
+        }
+
+        public override async Task<IList<User>> GetUsersInRoleAsync(string roleName)
+        {
+            var role = await _roleManager.GetRoleByNameAsync(roleName);
+            if (role == null)
+            {
+                return new List<User>();
+            }
+
+            var users = await _store.GetUsersInRoleAsync(role.NormalizedName);
+
+            return users;
         }
     }
 }

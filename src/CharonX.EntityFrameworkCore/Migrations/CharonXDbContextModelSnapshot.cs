@@ -1143,8 +1143,7 @@ namespace CharonX.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.HasIndex("TenantId", "Code")
-                        .IsUnique();
+                    b.HasIndex("TenantId", "Code");
 
                     b.ToTable("AbpOrganizationUnits");
                 });
@@ -1369,6 +1368,10 @@ namespace CharonX.Migrations
                         .HasColumnType("varchar(64) CHARACTER SET utf8mb4")
                         .HasMaxLength(64);
 
+                    b.Property<string>("City")
+                        .HasColumnType("varchar(10) CHARACTER SET utf8mb4")
+                        .HasMaxLength(10);
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("varchar(128) CHARACTER SET utf8mb4")
@@ -1394,6 +1397,17 @@ namespace CharonX.Migrations
                     b.Property<string>("EmailConfirmationCode")
                         .HasColumnType("varchar(328) CHARACTER SET utf8mb4")
                         .HasMaxLength(328);
+
+                    b.Property<DateTime>("ExpireDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("varchar(2) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2);
+
+                    b.Property<string>("IdNumber")
+                        .HasColumnType("varchar(18) CHARACTER SET utf8mb4")
+                        .HasMaxLength(18);
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -1436,6 +1450,10 @@ namespace CharonX.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
+
+                    b.Property<string>("OfficePhoneNumber")
+                        .HasColumnType("varchar(32) CHARACTER SET utf8mb4")
+                        .HasMaxLength(32);
 
                     b.Property<string>("Password")
                         .IsRequired()

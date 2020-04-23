@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Abp.Organizations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CharonX.Users
 {
@@ -35,6 +37,7 @@ namespace CharonX.Users
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IAbpSession _abpSession;
         private readonly LogInManager _logInManager;
+        private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
 
         public UserAppService(
             IRepository<User, long> repository,
@@ -43,7 +46,8 @@ namespace CharonX.Users
             IRepository<Role> roleRepository,
             IPasswordHasher<User> passwordHasher,
             IAbpSession abpSession,
-            LogInManager logInManager)
+            LogInManager logInManager,
+            IRepository<OrganizationUnit, long> orgUnitRepository)
             : base(repository)
         {
             _repository = repository;
@@ -53,6 +57,7 @@ namespace CharonX.Users
             _passwordHasher = passwordHasher;
             _abpSession = abpSession;
             _logInManager = logInManager;
+            _orgUnitRepository = orgUnitRepository;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -88,8 +93,6 @@ namespace CharonX.Users
 
             return await GetAsync(new EntityDto<long>(user.Id));
         }
-
-        
 
         private async Task CheckDuplicatedPhoneNumber(User user)
         {
@@ -188,11 +191,51 @@ namespace CharonX.Users
             await _userManager.DeleteAsync(user);
         }
 
-        public async Task<ListResultDto<RoleDto>> GetRoles()
+        public async Task<List<UserDto>> GetUsersInRoleAsync(string roleName)
         {
-            var roles = await _roleRepository.GetAllListAsync();
-            return new ListResultDto<RoleDto>(ObjectMapper.Map<List<RoleDto>>(roles));
+            List<UserDto> userDtos = new List<UserDto>();
+
+            var users = await _userManager.GetUsersInRoleAsync(roleName);
+            foreach (User user in users)
+            {
+                UserDto userDto = ObjectMapper.Map<UserDto>(user);
+                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await GetRolesOfUserAsync(user);
+                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                userDtos.Add(userDto);
+            }
+
+            return userDtos;
         }
+
+        public async Task<List<UserDto>> GetUsersInOrgUnitAsync(string orgUnitName, bool includeChildren = false)
+        {
+            List<UserDto> userDtos = new List<UserDto>();
+
+            var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.DisplayName == orgUnitName);
+            if (orgUnit == null)
+            {
+                return userDtos;
+            }
+
+            var users = await _userManager.GetUsersInOrganizationUnitAsync(orgUnit, includeChildren);
+            foreach (User user in users)
+            {
+                UserDto userDto = ObjectMapper.Map<UserDto>(user);
+                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await GetRolesOfUserAsync(user);
+                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                userDtos.Add(userDto);
+            }
+
+            return userDtos;
+        }
+
+        // public async Task<ListResultDto<RoleDto>> GetRoles()
+        // {
+        //     var roles = await _roleRepository.GetAllListAsync();
+        //     return new ListResultDto<RoleDto>(ObjectMapper.Map<List<RoleDto>>(roles));
+        // }
 
         public async Task ChangeLanguage(ChangeUserLanguageDto input)
         {
@@ -278,9 +321,20 @@ namespace CharonX.Users
             return true;
         }
 
-        public Task<bool> ActivateUser(ActivateUserDto input)
+        [HttpPut]
+        public async Task<bool> ActivateUser(ActivateUserDto input)
         {
-            throw new System.NotImplementedException();
+            var user = await Repository.GetAsync(input.UserId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.IsActive = input.IsActive;
+
+            CheckErrors(await _userManager.UpdateAsync(user));
+
+            return true;
         }
 
         public async Task<bool> ResetPassword(ResetPasswordDto input)

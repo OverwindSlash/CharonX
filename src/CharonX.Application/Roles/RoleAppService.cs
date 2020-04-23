@@ -20,13 +20,11 @@ namespace CharonX.Roles
     public class RoleAppService : AsyncCrudAppService<Role, RoleDto, int, PagedRoleResultRequestDto, CreateRoleDto, RoleDto>, IRoleAppService
     {
         private readonly RoleManager _roleManager;
-        private readonly UserManager _userManager;
 
-        public RoleAppService(IRepository<Role> repository, RoleManager roleManager, UserManager userManager)
+        public RoleAppService(IRepository<Role> repository, RoleManager roleManager)
             : base(repository)
         {
             _roleManager = roleManager;
-            _userManager = userManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
