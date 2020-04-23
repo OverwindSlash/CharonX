@@ -3,11 +3,15 @@ using Abp.AutoMapper;
 using Abp.MultiTenancy;
 using CharonX.Authorization.Users;
 using System.ComponentModel.DataAnnotations;
+using Abp.Dependency;
+using Abp.Localization;
+using Abp.Runtime.Validation;
+using CharonX.Validation;
 
 namespace CharonX.MultiTenancy.Dto
 {
     [AutoMapTo(typeof(Tenant))]
-    public class CreateTenantDto
+    public class CreateTenantDto : ICustomValidate
     {
         private string _adminEmailAddress;
 
@@ -45,5 +49,22 @@ namespace CharonX.MultiTenancy.Dto
         //public string ConnectionString { get; set; }
 
         public bool IsActive {get; set;}
+
+        public void AddValidationErrors(CustomValidationContext context)
+        {
+            if (!ValidationHelper.IsMobilePhone(AdminPhoneNumber))
+            {
+                string pattern = context.Localize(CharonXConsts.LocalizationSourceName, "InvalidPhoneNumber");
+                string message = string.Format(pattern, AdminPhoneNumber);
+                context.Results.Add(new ValidationResult(message));
+            }
+
+            if (!ValidationHelper.IsEmail(AdminEmailAddress))
+            {
+                string pattern = context.Localize(CharonXConsts.LocalizationSourceName, "InvalidEmailAddress");
+                string message = string.Format(pattern, AdminEmailAddress);
+                context.Results.Add(new ValidationResult(message));
+            }
+        }
     }
 }

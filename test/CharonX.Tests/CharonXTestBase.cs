@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Abp;
+﻿using Abp;
 using Abp.Authorization.Users;
 using Abp.Events.Bus;
 using Abp.Events.Bus.Entities;
@@ -14,6 +10,10 @@ using CharonX.EntityFrameworkCore;
 using CharonX.EntityFrameworkCore.Seed.Host;
 using CharonX.EntityFrameworkCore.Seed.Tenants;
 using CharonX.MultiTenancy;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CharonX.Tests
 {

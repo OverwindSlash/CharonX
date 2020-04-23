@@ -1,9 +1,11 @@
-﻿using Abp.Application.Services.Dto;
+﻿using System;
+using Abp.Application.Services.Dto;
 using CharonX.MultiTenancy;
 using CharonX.MultiTenancy.Dto;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using System.Threading.Tasks;
+using Abp.Localization;
 using Xunit;
 
 namespace CharonX.Tests.Tenants
@@ -15,6 +17,7 @@ namespace CharonX.Tests.Tenants
         public TenantAppService_Tests()
         {
             _tenantAppService = Resolve<ITenantAppService>();
+            var temp = Resolve<ILocalizationManager>();
 
             LoginAsHostAdmin();
         }
@@ -36,6 +39,49 @@ namespace CharonX.Tests.Tenants
                 var testTenant = await context.Tenants.FirstOrDefaultAsync(u => u.TenancyName == dto.TenancyName);
                 testTenant.ShouldNotBeNull();
             });
+        }
+
+        [Fact]
+        public async Task CreateTenant_WrongPhoneNumber_Test()
+        {
+            CreateTenantDto dto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "138",
+                IsActive = true
+            };
+
+            try
+            {
+                var result = await _tenantAppService.CreateAsync(dto);
+            }
+            catch (Exception exception)
+            {
+                exception.Message.ShouldBe("Method arguments are not valid! See ValidationErrors for details.");
+            }
+        }
+
+        [Fact]
+        public async Task CreateTenant_WrongEmailAddress_Test()
+        {
+            CreateTenantDto dto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                AdminEmailAddress = "a@a",
+                IsActive = true
+            };
+
+            try
+            {
+                var result = await _tenantAppService.CreateAsync(dto);
+            }
+            catch (Exception exception)
+            {
+                exception.Message.ShouldBe("Method arguments are not valid! See ValidationErrors for details.");
+            }
         }
 
         [Fact]

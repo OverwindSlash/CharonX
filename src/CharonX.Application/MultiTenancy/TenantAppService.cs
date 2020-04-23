@@ -14,6 +14,8 @@ using CharonX.MultiTenancy.Dto;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Organizations;
+using CharonX.Organizations;
 
 namespace CharonX.MultiTenancy
 {
@@ -24,6 +26,7 @@ namespace CharonX.MultiTenancy
         private readonly EditionManager _editionManager;
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
+        private readonly OrganizationUnitManager _orgUnitManager;
         private readonly IAbpZeroDbMigrator _abpZeroDbMigrator;
 
         public TenantAppService(
@@ -32,6 +35,7 @@ namespace CharonX.MultiTenancy
             EditionManager editionManager,
             UserManager userManager,
             RoleManager roleManager,
+            OrganizationUnitManager orgUnitManager,
             IAbpZeroDbMigrator abpZeroDbMigrator)
             : base(repository)
         {
@@ -39,6 +43,7 @@ namespace CharonX.MultiTenancy
             _editionManager = editionManager;
             _userManager = userManager;
             _roleManager = roleManager;
+            _orgUnitManager = orgUnitManager;
             _abpZeroDbMigrator = abpZeroDbMigrator;
         }
 
@@ -76,11 +81,20 @@ namespace CharonX.MultiTenancy
                 var adminRole = _roleManager.Roles.Single(r => r.Name == StaticRoleNames.Tenants.Admin);
                 await _roleManager.GrantAllPermissionsAsync(adminRole);
 
+                // Create admin organization unit and set admin role
+                var adminOrgUnit = OrganizationUnitHelper.CreateDefaultAdminOrgUnit(tenant.Id);
+                await _orgUnitManager.CreateAsync(adminOrgUnit);
+                await CurrentUnitOfWork.SaveChangesAsync(); // To get static organization id
+                await _roleManager.SetOrganizationUnitsAsync(adminRole, new[] { adminOrgUnit.Id });
+
                 // Create admin user for the tenant
                 var adminUser = User.CreateTenantAdminUser(tenant.Id, input.AdminEmailAddress);
                 await _userManager.InitializeOptionsAsync(tenant.Id);
                 CheckErrors(await _userManager.CreateAsync(adminUser, User.DefaultPassword));
                 await CurrentUnitOfWork.SaveChangesAsync(); // To get admin user's id
+
+                // Assign admin user to AdminGroup ou.
+                await _userManager.AddToOrganizationUnitAsync(adminUser, adminOrgUnit);
 
                 // Assign admin user to role!
                 CheckErrors(await _userManager.AddToRoleAsync(adminUser, adminRole.Name));
