@@ -65,6 +65,14 @@ namespace CharonX.Organizations
             var roles = await _roleManager.GetRolesInOrganizationUnit(orgUnit);
             orgUnitDto.AssignedRoles = roles.Select(r => r.Name).ToList();
 
+            List<Permission> permissions = new List<Permission>();
+            foreach (Role role in roles)
+            {
+                permissions.AddRange(await _roleManager.GetGrantedPermissionsAsync(role));
+            }
+            permissions = permissions.Distinct().ToList();
+            orgUnitDto.GrantedPermissions = permissions.Select(p => p.Name).ToList();
+
             return orgUnitDto;
         }
 
@@ -148,7 +156,15 @@ namespace CharonX.Organizations
 
             var roles = await _roleManager.GetRolesInOrganizationUnit(orgUnit, includeChildren);
 
-            return ObjectMapper.Map<List<RoleDto>>(roles);
+            List<RoleDto> roleDtos = ObjectMapper.Map<List<RoleDto>>(roles);
+            foreach (Role role in roles)
+            {
+                int offset = roles.IndexOf(role);
+                var permissions = await _roleManager.GetGrantedPermissionsAsync(role);
+                roleDtos[offset].GrantedPermissions = permissions.Select(p => p.Name).ToList();
+            }
+
+            return roleDtos;
         }
 
         public async Task AddUserToOrgUnitAsync(SetOrgUnitUserDto input)

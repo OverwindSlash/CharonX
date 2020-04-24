@@ -15,5 +15,7 @@ namespace CharonX.Organizations.Dto
         public string Code { get; set; }
 
         public List<string> AssignedRoles { get; set; }
+
+        public List<string> GrantedPermissions { get; set; }
     }
 }

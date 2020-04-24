@@ -391,7 +391,7 @@ namespace CharonX.Tests.Organizations
                 Name = "RoleTest2",
                 DisplayName = "Test role2",
                 Description = "Role2 for test",
-                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Users }
             };
             var role2Dto = await _roleAppService.CreateAsync(createRoleDto2);
 
@@ -402,10 +402,16 @@ namespace CharonX.Tests.Organizations
             };
             await _orgUnitAppService.AddRoleToOrgUnitAsync(setOrgUnitRole2Dto);
 
+            var getOrgUnitDto = await _orgUnitAppService.GetAsync(new EntityDto<long>(orgUnitDto.Id));
+            getOrgUnitDto.AssignedRoles.Count.ShouldBe(2);
+            getOrgUnitDto.GrantedPermissions.Count.ShouldBe(2);
+
             var roles = await _orgUnitAppService.GetRolesInOrgUnitAsync(new EntityDto<long>(orgUnitDto.Id));
             roles.Count.ShouldBe(2);
             roles[0].DisplayName.ShouldBe("Test role1");
+            roles[0].GrantedPermissions.Count.ShouldBe(1);
             roles[1].DisplayName.ShouldBe("Test role2");
+            roles[1].GrantedPermissions.Count.ShouldBe(1);
         }
 
         [Fact]
