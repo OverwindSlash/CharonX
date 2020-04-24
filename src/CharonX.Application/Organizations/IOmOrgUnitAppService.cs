@@ -13,7 +13,7 @@ namespace CharonX.Organizations
 
         public Task<OrgUnitDto> GetOrgUnitInTenantAsync(int tenantId, EntityDto<long> input);
 
-        public Task<ListResultDto<OrgUnitListDto>> GetAllOrgUnitInTenantAsync(int tenantId, GetOrgUnitsInput input);
+        public Task<ListResultDto<OrgUnitDto>> GetAllOrgUnitInTenantAsync(int tenantId, GetOrgUnitsInput input);
 
         public Task<OrgUnitDto> UpdateOrgUnitInTenantAsync(int tenantId, OrgUnitDto input);
 

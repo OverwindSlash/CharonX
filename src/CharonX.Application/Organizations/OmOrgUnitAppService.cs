@@ -5,11 +5,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Authorization;
+using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
+using Abp.Extensions;
 using Abp.Organizations;
 using Abp.UI;
 using CharonX.Authorization.Roles;
 using CharonX.Roles.Dto;
+using Microsoft.EntityFrameworkCore;
 
 namespace CharonX.Organizations
 {
@@ -17,15 +21,18 @@ namespace CharonX.Organizations
     {
         private readonly OrganizationUnitManager _orgUnitManager;
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
+        private readonly IRepository<OrganizationUnitRole, long> _orgUnitRoleRepository;
         private readonly RoleManager _roleManager;
 
         public OmOrgUnitAppService(
             OrganizationUnitManager orgUnitManager,
             IRepository<OrganizationUnit, long> orgUnitRepository,
+            IRepository<OrganizationUnitRole, long> orgUnitRoleRepository,
             RoleManager roleManager)
         {
             _orgUnitManager = orgUnitManager;
             _orgUnitRepository = orgUnitRepository;
+            _orgUnitRoleRepository = orgUnitRoleRepository;
             _roleManager = roleManager;
         }
 
@@ -37,7 +44,7 @@ namespace CharonX.Organizations
                 orgUnit.TenantId = tenantId;
 
                 await _orgUnitManager.CreateAsync(orgUnit);
-                await CurrentUnitOfWork.SaveChangesAsync();
+                //await CurrentUnitOfWork.SaveChangesAsync();
 
                 return await GenerateOrgUnitDtoAsync(orgUnit);
             }
@@ -48,6 +55,14 @@ namespace CharonX.Organizations
             var orgUnitDto = ObjectMapper.Map<OrgUnitDto>(orgUnit);
             var roles = await _roleManager.GetRolesInOrganizationUnit(orgUnit);
             orgUnitDto.AssignedRoles = roles.Select(r => r.Name).ToList();
+
+            List<Permission> permissions = new List<Permission>();
+            foreach (Role role in roles)
+            {
+                permissions.AddRange(await _roleManager.GetGrantedPermissionsAsync(role));
+            }
+            permissions = permissions.Distinct().ToList();
+            orgUnitDto.GrantedPermissions = permissions.Select(p => p.Name).ToList();
 
             return orgUnitDto;
         }
@@ -62,19 +77,65 @@ namespace CharonX.Organizations
             }
         }
 
-        public Task<ListResultDto<OrgUnitListDto>> GetAllOrgUnitInTenantAsync(int tenantId, GetOrgUnitsInput input)
+        public async Task<ListResultDto<OrgUnitDto>> GetAllOrgUnitInTenantAsync(int tenantId, GetOrgUnitsInput input)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var allOrgUnits = await _orgUnitRepository.GetAll().ToListAsync();
+
+                if (!string.IsNullOrEmpty(input.Role))
+                {
+                    var role = await _roleManager.GetRoleByNameAsync(input.Role);
+                    var orgUnitRoles = _orgUnitRoleRepository.GetAll()
+                        .Where(our => our.RoleId == role.Id);
+
+                    var excludeOrgUnitIds = await orgUnitRoles.Select(our => our.OrganizationUnitId).ToListAsync();
+
+                    var excludeOrgUnits = allOrgUnits.Where(ou => excludeOrgUnitIds.Contains(ou.Id)).ToList();
+
+                    foreach (OrganizationUnit orgUnit in excludeOrgUnits)
+                    {
+                        allOrgUnits.Remove(orgUnit);
+                    }
+                }
+
+                List<OrgUnitDto> orgUnitDtos = new List<OrgUnitDto>();
+                foreach (OrganizationUnit orgUnit in allOrgUnits)
+                {
+                    orgUnitDtos.Add(await GenerateOrgUnitDtoAsync(orgUnit));
+                }
+
+                return new ListResultDto<OrgUnitDto>(orgUnitDtos);
+            }
         }
 
-        public Task<OrgUnitDto> UpdateOrgUnitInTenantAsync(int tenantId, OrgUnitDto input)
+        public async Task<OrgUnitDto> UpdateOrgUnitInTenantAsync(int tenantId, OrgUnitDto input)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var orgUnit = await _orgUnitRepository
+                    .GetAllIncluding(ou => ou.Children)
+                    .FirstOrDefaultAsync(ou => ou.Id == input.Id);
+
+                if (orgUnit.ParentId != input.ParentId)
+                {
+                    await _orgUnitManager.MoveAsync(orgUnit.Id, input.ParentId);
+                }
+
+                orgUnit.DisplayName = input.DisplayName;
+
+                await _orgUnitManager.UpdateAsync(orgUnit);
+
+                return ObjectMapper.Map<OrgUnitDto>(orgUnit);
+            }
         }
 
-        public Task DeleteOrgUnitInTenantAsync(int tenantId, EntityDto<long> input)
+        public async Task DeleteOrgUnitInTenantAsync(int tenantId, EntityDto<long> input)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                await _orgUnitManager.DeleteAsync(input.Id);
+            }
         }
 
         public async Task AddRoleToOrgUnitInTenantAsync(int tenantId, SetOrgUnitRoleDto input)
