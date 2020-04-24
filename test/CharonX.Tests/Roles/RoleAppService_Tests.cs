@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Abp.Application.Services.Dto;
 using CharonX.Authorization;
 using CharonX.Roles;
 using CharonX.Roles.Dto;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Abp.Application.Services.Dto;
 using Xunit;
 
 namespace CharonX.Tests.Roles
@@ -32,7 +32,6 @@ namespace CharonX.Tests.Roles
                 Description = "Role for test",
                 GrantedPermissions = new List<string>() {PermissionNames.Pages_Roles}
             };
-
             var roleDto = await _roleAppService.CreateAsync(createRoleDto);
 
             roleDto.Id.ShouldNotBe(0);

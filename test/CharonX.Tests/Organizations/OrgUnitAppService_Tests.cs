@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Abp.Application.Services.Dto;
-using CharonX.Organizations;
-using CharonX.Organizations.Dto;
-using Microsoft.EntityFrameworkCore;
-using Shouldly;
-using System.Threading.Tasks;
+﻿using Abp.Application.Services.Dto;
 using CharonX.Authorization;
 using CharonX.Authorization.Users;
+using CharonX.Organizations;
+using CharonX.Organizations.Dto;
 using CharonX.Roles;
 using CharonX.Roles.Dto;
+using CharonX.Users;
 using CharonX.Users.Dto;
+using Microsoft.EntityFrameworkCore;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CharonX.Tests.Organizations
@@ -20,11 +21,13 @@ namespace CharonX.Tests.Organizations
     {
         private readonly IOrgUnitAppService _orgUnitAppService;
         private readonly IRoleAppService _roleAppService;
+        private readonly IUserAppService _userAppService;
 
         public OrgUnitAppService_Tests()
         {
             _orgUnitAppService = Resolve<IOrgUnitAppService>();
             _roleAppService = Resolve<IRoleAppService>();
+            _userAppService = Resolve<IUserAppService>();
 
             LoginAsDefaultTenantAdmin();
         }
@@ -418,11 +421,110 @@ namespace CharonX.Tests.Organizations
             CreateUserDto createUserDto = new CreateUserDto()
             {
                 UserName = "TestUser",
+                Password = User.DefaultPassword,
                 Name = "John",
                 Surname = "Smith",
-                EmailAddress = "test@test.com",
-                Password = User.DefaultPassword
+                PhoneNumber = "13851400000",
+                IsActive = true
             };
+            var userDto = await _userAppService.CreateAsync(createUserDto);
+
+            var getUser1Dto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUser1Dto.OrgUnitNames.Length.ShouldBe(0);
+
+            SetOrgUnitUserDto setOrgUnitUserDto = new SetOrgUnitUserDto()
+            {
+                UserId = userDto.Id,
+                OrgUnitId = orgUnitDto.Id
+            };
+            await _orgUnitAppService.AddUserToOrgUnitAsync(setOrgUnitUserDto);
+
+            var getUser2Dto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUser2Dto.OrgUnitNames.Length.ShouldBe(1);
+        }
+
+        [Fact]
+        public async Task RemoveUserFromOrgUnit_Test()
+        {
+            CreateOrgUnitDto createOrgUnitDto = new CreateOrgUnitDto()
+            {
+                ParentId = null,
+                DisplayName = "Ou Test"
+            };
+            var orgUnitDto = await _orgUnitAppService.CreateAsync(createOrgUnitDto);
+
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var userDto = await _userAppService.CreateAsync(createUserDto);
+
+            var getUser1Dto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUser1Dto.OrgUnitNames.Length.ShouldBe(0);
+
+            SetOrgUnitUserDto setOrgUnitUserDto = new SetOrgUnitUserDto()
+            {
+                UserId = userDto.Id,
+                OrgUnitId = orgUnitDto.Id
+            };
+            await _orgUnitAppService.AddUserToOrgUnitAsync(setOrgUnitUserDto);
+
+            var getUser2Dto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUser2Dto.OrgUnitNames.Length.ShouldBe(1);
+
+            // Remove from organization unit
+            await _orgUnitAppService.RemoveUserFromOrgUnitAsync(setOrgUnitUserDto);
+            var getUser3Dto = await _userAppService.GetAsync(new EntityDto<long>(userDto.Id));
+            getUser3Dto.OrgUnitNames.Length.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task GetUsersInOrgUnit_Test()
+        {
+            CreateOrgUnitDto createOrgUnitDto = new CreateOrgUnitDto()
+            {
+                ParentId = null,
+                DisplayName = "Ou Test"
+            };
+            var orgUnitDto = await _orgUnitAppService.CreateAsync(createOrgUnitDto);
+
+            CreateUserDto createUser1Dto = new CreateUserDto()
+            {
+                UserName = "TestUser1",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+            var user1Dto = await _userAppService.CreateAsync(createUser1Dto);
+
+            SetOrgUnitUserDto setOrgUnitUserDto = new SetOrgUnitUserDto()
+            {
+                UserId = user1Dto.Id,
+                OrgUnitId = orgUnitDto.Id
+            };
+            await _orgUnitAppService.AddUserToOrgUnitAsync(setOrgUnitUserDto);
+
+            CreateUserDto createUser2Dto = new CreateUserDto()
+            {
+                UserName = "TestUser2",
+                Password = User.DefaultPassword,
+                Name = "Mike",
+                Surname = "Smith",
+                PhoneNumber = "13851400002",
+                IsActive = true,
+                OrgUnitNames = new[] { "Ou Test" }
+            };
+            var user2Dto = await _userAppService.CreateAsync(createUser2Dto);
+
+            var orgUnitUsers = await _orgUnitAppService.GetUsersInOrgUnitAsync(new EntityDto<long>(orgUnitDto.Id));
+            orgUnitUsers.Count.ShouldBe(2);
         }
     }
 }

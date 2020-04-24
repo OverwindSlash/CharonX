@@ -90,42 +90,7 @@ namespace CharonX.Authorization.Users
                 roles.AddRange(await _roleManager.GetRolesInOrganizationUnit(organizationUnit));
             }
             roles = roles.Distinct().ToList();
-            await SetRolesAsync1(user, roles.Select(r => r.Name).ToArray());
-
-            return IdentityResult.Success;
-        }
-
-        public virtual async Task<IdentityResult> SetRolesAsync1(User user, string[] roleNames)
-        {
-            await AbpUserStore.UserRepository.EnsureCollectionLoadedAsync(user, u => u.Roles);
-
-            //Remove from removed roles
-            foreach (var userRole in user.Roles.ToList())
-            {
-                var role = await RoleManager.FindByIdAsync(userRole.RoleId.ToString());
-                if (role != null && roleNames.All(roleName => role.Name != roleName))
-                {
-                    var result = await RemoveFromRoleAsync(user, role.Name);
-                    if (!result.Succeeded)
-                    {
-                        return result;
-                    }
-                }
-            }
-
-            //Add to added roles
-            foreach (var roleName in roleNames)
-            {
-                var role = await RoleManager.GetRoleByNameAsync(roleName);
-                if (user.Roles.All(ur => ur.RoleId != role.Id))
-                {
-                    var result = await AddToRoleAsync(user, roleName);
-                    if (!result.Succeeded)
-                    {
-                        return result;
-                    }
-                }
-            }
+            await SetRolesAsync(user, roles.Select(r => r.Name).ToArray());
 
             return IdentityResult.Success;
         }
