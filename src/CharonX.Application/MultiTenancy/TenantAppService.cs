@@ -88,7 +88,7 @@ namespace CharonX.MultiTenancy
                 await _roleManager.SetOrganizationUnitsAsync(adminRole, new[] { adminOrgUnit.Id });
 
                 // Create admin user for the tenant
-                var adminUser = User.CreateTenantAdminUser(tenant.Id, input.AdminEmailAddress);
+                var adminUser = User.CreateTenantAdminUser(tenant.Id, input.AdminEmailAddress, input.AdminPhoneNumber);
                 await _userManager.InitializeOptionsAsync(tenant.Id);
                 CheckErrors(await _userManager.CreateAsync(adminUser, User.DefaultPassword));
                 await CurrentUnitOfWork.SaveChangesAsync(); // To get admin user's id

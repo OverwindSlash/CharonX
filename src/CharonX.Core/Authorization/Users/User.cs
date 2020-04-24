@@ -19,7 +19,7 @@ namespace CharonX.Authorization.Users
             return Guid.NewGuid().ToString("N").Truncate(16);
         }
 
-        public static User CreateTenantAdminUser(int tenantId, string emailAddress)
+        public static User CreateTenantAdminUser(int tenantId, string emailAddress, string phoneNumber = "")
         {
             var user = new User
             {
@@ -27,6 +27,7 @@ namespace CharonX.Authorization.Users
                 UserName = AdminUserName,
                 Name = AdminUserName,
                 Surname = AdminUserName,
+                PhoneNumber = phoneNumber,
                 EmailAddress = emailAddress,
                 Roles = new List<UserRole>()
             };

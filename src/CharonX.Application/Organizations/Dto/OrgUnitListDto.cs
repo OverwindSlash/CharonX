@@ -1,12 +1,10 @@
 ﻿using Abp.Application.Services.Dto;
-using Abp.AutoMapper;
-using Abp.Organizations;
-using System.Collections.Generic;
+using Abp.Domain.Entities.Auditing;
+using System;
 
 namespace CharonX.Organizations.Dto
 {
-    [AutoMap(typeof(OrganizationUnit))]
-    public class OrgUnitDto : EntityDto<long>
+    public class OrgUnitListDto : EntityDto, IHasCreationTime
     {
         public long? ParentId { get; set; }
 
@@ -14,6 +12,6 @@ namespace CharonX.Organizations.Dto
 
         public string Code { get; set; }
 
-        public List<string> AssignedRoles { get; set; }
+        public DateTime CreationTime { get; set; }
     }
 }

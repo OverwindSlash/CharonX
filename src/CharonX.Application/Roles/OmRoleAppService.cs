@@ -13,6 +13,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CharonX.Authorization.Users;
+using CharonX.Users.Dto;
 
 namespace CharonX.Roles
 {
@@ -21,13 +23,16 @@ namespace CharonX.Roles
     {
         private readonly RoleManager _roleManager;
         private readonly TenantManager _tenantManager;
+        private readonly UserManager _userManager;
 
         public OmRoleAppService(
             RoleManager roleManager,
-            TenantManager tenantManager)
+            TenantManager tenantManager,
+            UserManager userManager)
         {
             _roleManager = roleManager;
             _tenantManager = tenantManager;
+            _userManager = userManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -134,6 +139,57 @@ namespace CharonX.Roles
                 }
 
                 await _roleManager.DeleteRoleAndDetachUserAsync(role);
+            }
+        }
+
+        public async Task AddUserToRoleInTenantAsync(int tenantId, SetRoleUserDto input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                try
+                {
+                    var user = await _userManager.GetUserByIdAsync(input.UserId);
+                    var role = await _roleManager.GetRoleByIdAsync(input.RoleId);
+                    await _userManager.AddToRoleAsync(user, role.Name);
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(exception.Message);
+                }
+            }
+        }
+
+        public async Task RemoveUserFromRoleInTenantAsync(int tenantId, SetRoleUserDto input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                try
+                {
+                    var user = await _userManager.GetUserByIdAsync(input.UserId);
+                    var role = await _roleManager.GetRoleByIdAsync(input.RoleId);
+                    await _userManager.RemoveFromRoleAsync(user, role.Name);
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(exception.Message);
+                }
+            }
+        }
+
+        public async Task<List<UserDto>> GetUsersInRoleInTenantAsync(int tenantId, EntityDto<int> input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var role = await _roleManager.GetRoleByIdAsync(input.Id);
+
+                if (role == null)
+                {
+                    throw new UserFriendlyException(L("RoleNotFound", input.Id));
+                }
+
+                var users = await _userManager.GetUsersInRoleAsync(role.Name);
+
+                return ObjectMapper.Map<List<UserDto>>(users);
             }
         }
     }

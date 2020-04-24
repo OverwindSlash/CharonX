@@ -1,4 +1,5 @@
-﻿using Abp.Application.Services;
+﻿using System;
+using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
@@ -7,12 +8,13 @@ using Abp.Linq.Extensions;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
-using CharonX.Authorization.Users;
 using CharonX.Roles.Dto;
+using CharonX.Users.Dto;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CharonX.Authorization.Users;
 
 namespace CharonX.Roles
 {
@@ -20,11 +22,16 @@ namespace CharonX.Roles
     public class RoleAppService : AsyncCrudAppService<Role, RoleDto, int, PagedRoleResultRequestDto, CreateRoleDto, RoleDto>, IRoleAppService
     {
         private readonly RoleManager _roleManager;
+        private readonly UserManager _userManager;
 
-        public RoleAppService(IRepository<Role> repository, RoleManager roleManager)
+        public RoleAppService(
+            IRepository<Role> repository, 
+            RoleManager roleManager,
+            UserManager userManager)
             : base(repository)
         {
             _roleManager = roleManager;
+            _userManager = userManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -61,6 +68,48 @@ namespace CharonX.Roles
                 .ToListAsync();
 
             return new ListResultDto<RoleListDto>(ObjectMapper.Map<List<RoleListDto>>(roles));
+        }
+
+        public async Task AddUserToRoleAsync(SetRoleUserDto input)
+        {
+            try
+            {
+                var user = await _userManager.GetUserByIdAsync(input.UserId);
+                var role = await _roleManager.GetRoleByIdAsync(input.RoleId);
+                await _userManager.AddToRoleAsync(user, role.Name);
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(exception.Message);
+            }
+        }
+
+        public async Task RemoveUserFromRoleAsync(SetRoleUserDto input)
+        {
+            try
+            {
+                var user = await _userManager.GetUserByIdAsync(input.UserId);
+                var role = await _roleManager.GetRoleByIdAsync(input.RoleId);
+                await _userManager.RemoveFromRoleAsync(user, role.Name);
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(exception.Message);
+            }
+        }
+
+        public async Task<List<UserDto>> GetUsersInRoleAsync(EntityDto<int> input)
+        {
+            var role = await _roleManager.GetRoleByIdAsync(input.Id);
+
+            if (role == null)
+            {
+                throw new UserFriendlyException(L("RoleNotFound", input.Id));
+            }
+
+            var users = await _userManager.GetUsersInRoleAsync(role.Name);
+
+            return ObjectMapper.Map<List<UserDto>>(users);
         }
 
         public override async Task<RoleDto> UpdateAsync(RoleDto input)

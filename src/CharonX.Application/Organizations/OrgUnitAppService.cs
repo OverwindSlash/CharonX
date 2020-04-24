@@ -1,8 +1,10 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.Organizations;
 using Abp.UI;
+using CharonX.Authorization;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
 using CharonX.Organizations.Dto;
@@ -16,6 +18,7 @@ using System.Threading.Tasks;
 
 namespace CharonX.Organizations
 {
+    [AbpAuthorize(PermissionNames.Pages_Roles)]
     public class OrgUnitAppService : ApplicationService, IOrgUnitAppService
     {
         private readonly OrganizationUnitManager _orgUnitManager;
@@ -46,14 +49,23 @@ namespace CharonX.Organizations
             await _orgUnitManager.CreateAsync(orgUnit);
             await CurrentUnitOfWork.SaveChangesAsync();
 
-            return ObjectMapper.Map<OrgUnitDto>(orgUnit);
+            return await GenerateOrgUnitDtoAsync(orgUnit);
         }
 
         public async Task<OrgUnitDto> GetAsync(EntityDto<long> input)
         {
             var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.Id == input.Id);
 
-            return ObjectMapper.Map<OrgUnitDto>(orgUnit);
+            return await GenerateOrgUnitDtoAsync(orgUnit);
+        }
+
+        private async Task<OrgUnitDto> GenerateOrgUnitDtoAsync(OrganizationUnit orgUnit)
+        {
+            var orgUnitDto = ObjectMapper.Map<OrgUnitDto>(orgUnit);
+            var roles = await _roleManager.GetRolesInOrganizationUnit(orgUnit);
+            orgUnitDto.AssignedRoles = roles.Select(r => r.Name).ToList();
+
+            return orgUnitDto;
         }
 
         public async Task<PagedResultDto<OrgUnitDto>> GetAllAsync(PagedResultRequestDto input)
@@ -66,9 +78,13 @@ namespace CharonX.Organizations
 
             var entities = await query.ToListAsync();
 
-            return new PagedResultDto<OrgUnitDto>(totalCount, entities.Select(
-                    r => ObjectMapper.Map<OrgUnitDto>(r)).ToList()
-            );
+            List<OrgUnitDto> orgUnitDtos = new List<OrgUnitDto>();
+            foreach (OrganizationUnit orgUnit in entities)
+            {
+                orgUnitDtos.Add(await GenerateOrgUnitDtoAsync(orgUnit));
+            }
+
+            return new PagedResultDto<OrgUnitDto>(totalCount, orgUnitDtos);
         }
 
         public async Task<OrgUnitDto> UpdateAsync(OrgUnitDto input)

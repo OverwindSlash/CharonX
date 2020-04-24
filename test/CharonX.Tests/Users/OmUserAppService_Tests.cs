@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Abp.Application.Services.Dto;
+﻿using Abp.Application.Services.Dto;
 using CharonX.Authorization.Users;
 using CharonX.MultiTenancy;
 using CharonX.MultiTenancy.Dto;
@@ -9,6 +7,8 @@ using CharonX.Users;
 using CharonX.Users.Dto;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CharonX.Tests.Users
@@ -50,7 +50,7 @@ namespace CharonX.Tests.Users
                 Surname = "Smith",
                 Gender = "M",
                 IdNumber = "320101198001010021",
-                PhoneNumber = "13851400000",
+                PhoneNumber = "13851400001",
                 OfficePhoneNumber = "025-86328888",
                 City = "Nanjing",
                 EmailAddress = "test@test.com",
@@ -93,7 +93,7 @@ namespace CharonX.Tests.Users
                 Surname = "Smith",
                 Gender = "M",
                 IdNumber = "320101198001010021",
-                PhoneNumber = "13851400000",
+                PhoneNumber = "13851400001",
                 OfficePhoneNumber = "025-86328888",
                 City = "Nanjing",
                 EmailAddress = "test@test.com",
@@ -137,7 +137,7 @@ namespace CharonX.Tests.Users
                 Surname = "Smith",
                 Gender = "M",
                 IdNumber = "320101198001010021",
-                PhoneNumber = "13851400000",
+                PhoneNumber = "13851400001",
                 OfficePhoneNumber = "025-86328888",
                 City = "Nanjing",
                 EmailAddress = "test@test.com",
@@ -174,7 +174,7 @@ namespace CharonX.Tests.Users
                 Surname = "Smith",
                 Gender = "M",
                 IdNumber = "320101198001010021",
-                PhoneNumber = "13851400000",
+                PhoneNumber = "13851400001",
                 OfficePhoneNumber = "025-86328888",
                 City = "Nanjing",
                 EmailAddress = "test@test.com",

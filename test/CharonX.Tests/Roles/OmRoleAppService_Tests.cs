@@ -9,6 +9,9 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CharonX.Authorization.Users;
+using CharonX.Users;
+using CharonX.Users.Dto;
 using Xunit;
 
 namespace CharonX.Tests.Roles
@@ -17,11 +20,13 @@ namespace CharonX.Tests.Roles
     {
         private readonly ITenantAppService _tenantAppService;
         private readonly IOmRoleAppService _omRoleAppService;
+        private readonly IOmUserAppService _omUserAppService;
 
         public OmRoleAppService_Tests()
         {
             _tenantAppService = Resolve<ITenantAppService>();
             _omRoleAppService = Resolve<IOmRoleAppService>();
+            _omUserAppService = Resolve<IOmUserAppService>();
 
             LoginAsHostAdmin();
         }
@@ -347,6 +352,52 @@ namespace CharonX.Tests.Roles
             {
                 exception.Message.ShouldBe("There is no tenant with given id: 99");
             }
+        }
+
+        [Fact]
+        public async Task AddUserToRoleInTenant_Test()
+        {
+            CreateTenantDto createTenantDto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(createTenantDto);
+
+            var createRoleDto = new CreateRoleDto()
+            {
+                Name = "RoleTest",
+                DisplayName = "Test role",
+                Description = "Role for test",
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+            };
+            var roleDto = await _omRoleAppService.CreateRoleInTenantAsync(tenantDto.Id, createRoleDto);
+
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+            var userDto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUserDto);
+
+            var getUser1Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            getUser1Dto.RoleNames.Length.ShouldBe(0);
+
+            SetRoleUserDto setRoleUserDto = new SetRoleUserDto()
+            {
+                UserId = userDto.Id,
+                RoleId = roleDto.Id
+            };
+            await _omRoleAppService.AddUserToRoleInTenantAsync(tenantDto.Id, setRoleUserDto);
+
+            var getUser2Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            getUser2Dto.RoleNames.Length.ShouldBe(1);
         }
     }
 }
