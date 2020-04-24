@@ -1,11 +1,11 @@
-﻿using System;
-using Abp.Application.Services.Dto;
+﻿using Abp.Application.Services.Dto;
+using Abp.Localization;
 using CharonX.MultiTenancy;
 using CharonX.MultiTenancy.Dto;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
+using System;
 using System.Threading.Tasks;
-using Abp.Localization;
 using Xunit;
 
 namespace CharonX.Tests.Tenants
@@ -17,7 +17,6 @@ namespace CharonX.Tests.Tenants
         public TenantAppService_Tests()
         {
             _tenantAppService = Resolve<ITenantAppService>();
-            var temp = Resolve<ILocalizationManager>();
 
             LoginAsHostAdmin();
         }
@@ -90,7 +89,6 @@ namespace CharonX.Tests.Tenants
             var result = await _tenantAppService.GetAsync(new EntityDto<int>(1));
             result.TenancyName.ShouldBe("Default");
         }
-
 
         [Fact]
         public async Task GetAllTenants_Test()

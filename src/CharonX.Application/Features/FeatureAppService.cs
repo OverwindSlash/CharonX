@@ -78,6 +78,7 @@ namespace CharonX.Features
         private async Task SetTenantFeatureAsync(EnableFeatureDto input, Tenant tenant)
         {
             await _tenantManager.ResetAllFeaturesAsync(tenant.Id);
+            await CurrentUnitOfWork.SaveChangesAsync();
             await _tenantManager.SetFeatureValuesAsync(tenant.Id,
                 input.FeatureNames.Select(f => new NameValue(f, "true")).ToArray());
         }

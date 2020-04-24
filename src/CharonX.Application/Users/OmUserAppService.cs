@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.IdentityFramework;
+using Abp.Organizations;
 using Abp.UI;
+using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
+using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
 
 namespace CharonX.Users
@@ -15,11 +18,14 @@ namespace CharonX.Users
     public class OmUserAppService : ApplicationService, IOmUserAppService
     {
         private readonly UserManager _userManager;
+        private readonly RoleManager _roleManager;
 
         public OmUserAppService(
-            UserManager userManager)
+            UserManager userManager,
+            RoleManager roleManager)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -65,14 +71,35 @@ namespace CharonX.Users
             }
         }
 
-        public Task<UserDto> CreateAdminUserInTenantAsync(int tenantId, CreateUserDto input)
+        public async Task<UserDto> CreateAdminUserInTenantAsync(int tenantId, CreateUserDto input)
         {
-            throw new NotImplementedException();
+            input.OrgUnitNames = input.OrgUnitNames.Append(OrganizationUnitHelper.DefaultAdminOrgUnitName).ToArray();
+
+            return await CreateUserInTenantAsync(tenantId, input);
         }
 
-        public Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId)
+        public async Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var adminRole = await _roleManager.GetRoleByNameAsync(StaticRoleNames.Tenants.Admin);
+
+                IList<User> adminUsers = await _userManager.GetUsersInRoleAsync(adminRole.Name);
+
+                List<UserDto> userDtos = new List<UserDto>();
+                foreach (User adminUser in adminUsers)
+                {
+                    UserDto userDto = ObjectMapper.Map<UserDto>(adminUser);
+
+                    userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(adminUser);
+                    userDto.RoleNames = await GetRolesOfUserAsync(adminUser);
+                    userDto.Permissions = await GetPermissionsOfUserAsync(adminUser);
+
+                    userDtos.Add(userDto);
+                }
+
+                return userDtos;
+            }
         }
 
         public async Task<UserDto> GetUserInTenantAsync(int tenantId, EntityDto<long> input)

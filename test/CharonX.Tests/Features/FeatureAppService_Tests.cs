@@ -62,7 +62,7 @@ namespace CharonX.Tests.Features
         }
 
         [Fact]
-        public async Task EnableFeatureForTenantAsync_Test()
+        public async Task EnableFeatureForTenantAsync_Enable_Test()
         {
             CreateTenantDto createTenantDto = new CreateTenantDto()
             {
@@ -87,6 +87,54 @@ namespace CharonX.Tests.Features
 
             var permissions = await _featureAppService.GetTenantPermissionsAsync(tenantDto.Id);
             permissions.Items.Count.ShouldBe(3);
+        }
+
+        [Fact]
+        public async Task EnableFeatureForTenantAsync_Disable_Test()
+        {
+            CreateTenantDto createTenantDto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(createTenantDto);
+
+            var permissions0 = await _featureAppService.GetTenantPermissionsAsync(tenantDto.Id);
+            permissions0.Items.Count.ShouldBe(2);
+
+            // Enable two features.
+            EnableFeatureDto enableFeature1Dto = new EnableFeatureDto()
+            {
+                TenantId = tenantDto.Id,
+                FeatureNames = new List<string>() { "SmartPassFeature", "SmartSecurityFeature" }
+            };
+
+            bool result1 = await _featureAppService.EnableFeatureForTenantAsync(enableFeature1Dto);
+            result1.ShouldBeTrue();
+
+            var features1 = await _featureAppService.ListAllFeaturesInTenantAsync(tenantDto.Id);
+            features1.Count.ShouldBe(2);
+
+            var permissions1 = await _featureAppService.GetTenantPermissionsAsync(tenantDto.Id);
+            permissions1.Items.Count.ShouldBe(4);
+
+            // Reset feature to remain one left
+            EnableFeatureDto enableFeature2Dto = new EnableFeatureDto()
+            {
+                TenantId = tenantDto.Id,
+                FeatureNames = new List<string>() { "SmartSecurityFeature" }
+            };
+
+            bool result2 = await _featureAppService.EnableFeatureForTenantAsync(enableFeature2Dto);
+            result2.ShouldBeTrue();
+
+            var features2 = await _featureAppService.ListAllFeaturesInTenantAsync(tenantDto.Id);
+            features2.Count.ShouldBe(1);
+
+            var permissions2 = await _featureAppService.GetTenantPermissionsAsync(tenantDto.Id);
+            permissions2.Items.Count.ShouldBe(3);
         }
 
         [Fact]

@@ -6,16 +6,16 @@ using Abp.Extensions;
 using Abp.IdentityFramework;
 using Abp.Linq.Extensions;
 using Abp.MultiTenancy;
+using Abp.Organizations;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
 using CharonX.Editions;
 using CharonX.MultiTenancy.Dto;
+using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.Organizations;
-using CharonX.Organizations;
 
 namespace CharonX.MultiTenancy
 {

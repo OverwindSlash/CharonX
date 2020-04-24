@@ -308,9 +308,11 @@ namespace CharonX.Tests.Users
             var userInRole2Before = await userManager.IsInRoleAsync(user, "Role2");
             userInRole2Before.ShouldBeTrue();
 
-            // TODO: Investigate why this function return 0 in test case
-            // var userCountBefore = await _userAppService.GetUsersInRoleAsync("Role1");
-            // userCountBefore.Count.ShouldBe(1);
+            var userCount1Before = await _userAppService.GetUsersInRoleAsync("Role1");
+            userCount1Before.Count.ShouldBe(1);
+
+            var userCount2Before = await _userAppService.GetUsersInRoleAsync("Role2");
+            userCount2Before.Count.ShouldBe(1);
 
             var userInOrgUnitBefore = await _userAppService.GetUsersInOrgUnitAsync("Ou Test");
             userInOrgUnitBefore.Count.ShouldBe(1);
@@ -331,6 +333,9 @@ namespace CharonX.Tests.Users
 
             var userCountAfter = await _userAppService.GetUsersInRoleAsync("Role1");
             userCountAfter.Count.ShouldBe(0);
+
+            var userCount2After = await _userAppService.GetUsersInRoleAsync("Role2");
+            userCount2After.Count.ShouldBe(0);
 
             var userInOrgUnitAfter = await _userAppService.GetUsersInOrgUnitAsync("Ou Test");
             userInOrgUnitAfter.Count.ShouldBe(0);

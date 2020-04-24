@@ -28,7 +28,7 @@ namespace CharonX.Authorization.Users
 
         public UserManager(
             RoleManager roleManager,
-            UserStore store, 
+            UserStore store,
             IOptions<IdentityOptions> optionsAccessor, 
             IPasswordHasher<User> passwordHasher, 
             IEnumerable<IUserValidator<User>> userValidators, 
@@ -82,7 +82,50 @@ namespace CharonX.Authorization.Users
             var organizationUnits = _orgUnitRepository.GetAll()
                 .Where(ou => orgUnitNames.Contains(ou.DisplayName)).ToList();
 
-            await this.SetOrganizationUnitsAsync(user, organizationUnits.Select(ou => ou.Id).ToArray());
+            await SetOrganizationUnitsAsync(user, organizationUnits.Select(ou => ou.Id).ToArray());
+
+            List<Role> roles = new List<Role>();
+            foreach (OrganizationUnit organizationUnit in organizationUnits)
+            {
+                roles.AddRange(await _roleManager.GetRolesInOrganizationUnit(organizationUnit));
+            }
+            roles = roles.Distinct().ToList();
+            await SetRolesAsync1(user, roles.Select(r => r.Name).ToArray());
+
+            return IdentityResult.Success;
+        }
+
+        public virtual async Task<IdentityResult> SetRolesAsync1(User user, string[] roleNames)
+        {
+            await AbpUserStore.UserRepository.EnsureCollectionLoadedAsync(user, u => u.Roles);
+
+            //Remove from removed roles
+            foreach (var userRole in user.Roles.ToList())
+            {
+                var role = await RoleManager.FindByIdAsync(userRole.RoleId.ToString());
+                if (role != null && roleNames.All(roleName => role.Name != roleName))
+                {
+                    var result = await RemoveFromRoleAsync(user, role.Name);
+                    if (!result.Succeeded)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            //Add to added roles
+            foreach (var roleName in roleNames)
+            {
+                var role = await RoleManager.GetRoleByNameAsync(roleName);
+                if (user.Roles.All(ur => ur.RoleId != role.Id))
+                {
+                    var result = await AddToRoleAsync(user, roleName);
+                    if (!result.Succeeded)
+                    {
+                        return result;
+                    }
+                }
+            }
 
             return IdentityResult.Success;
         }
@@ -92,6 +135,10 @@ namespace CharonX.Authorization.Users
             var alreadyInRoles = await GetRolesAsync(user);
 
             var roles = roleNames.Where(roleName => !alreadyInRoles.Contains(roleName)).ToArray();
+            if (roles.Length == 0)
+            {
+                return IdentityResult.Success;
+            }
 
             return await AddToRolesAsync(user, roles);
         }
