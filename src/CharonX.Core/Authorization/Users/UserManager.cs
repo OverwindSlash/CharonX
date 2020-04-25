@@ -143,5 +143,23 @@ namespace CharonX.Authorization.Users
 
             return users;
         }
+
+        public async Task<string[]> GetOrgUnitsOfUserAsync(User user)
+        {
+            var orgUnits = await GetOrganizationUnitsAsync(user);
+            return orgUnits.Select(ou => ou.DisplayName).ToArray();
+        }
+
+        public async Task<string[]> GetRolesOfUserAsync(User user)
+        {
+            var roles = await GetRolesAsync(user);
+            return roles.ToArray();
+        }
+
+        public async Task<string[]> GetPermissionsOfUserAsync(User user)
+        {
+            var permissions = await GetGrantedPermissionsAsync(user);
+            return permissions.Select(p => p.Name).ToArray();
+        }
     }
 }

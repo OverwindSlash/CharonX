@@ -105,6 +105,7 @@
     <text name="PhoneNumberDuplicated">手机号 {0} 已存在.</text>
     <text name="InvalidPhoneNumber">不正确的手机号: {0}.</text>
     <text name="InvalidEmailAddress">不正确的邮件地址: {0}.</text>
+    <text name="NeedLoginAsTenantAdmin">需要以租户管理员身份登录才可重置密码</text>
 
     <text name="SmartSecurityFeature">智慧安防功能包</text>
     <text name="SmartPassFeature">智慧通行功能包</text>

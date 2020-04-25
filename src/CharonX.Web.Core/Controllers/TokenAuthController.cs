@@ -8,15 +8,21 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Abp.Authorization;
 using Abp.Authorization.Users;
+using Abp.Domain.Repositories;
+using Abp.Domain.Uow;
 using Abp.MultiTenancy;
 using Abp.Runtime.Security;
 using Abp.UI;
 using CharonX.Authentication.External;
 using CharonX.Authentication.JwtBearer;
 using CharonX.Authorization;
+using CharonX.Authorization.AuthCode;
 using CharonX.Authorization.Users;
+using CharonX.Models;
 using CharonX.Models.TokenAuth;
 using CharonX.MultiTenancy;
+using CharonX.Validation;
+using Microsoft.EntityFrameworkCore;
 
 namespace CharonX.Controllers
 {
@@ -30,6 +36,8 @@ namespace CharonX.Controllers
         private readonly IExternalAuthConfiguration _externalAuthConfiguration;
         private readonly IExternalAuthManager _externalAuthManager;
         private readonly UserRegistrationManager _userRegistrationManager;
+        private readonly IRepository<User, long> _repository;
+        private readonly SmsAuthManager _smsAuthManager;
 
         public TokenAuthController(
             LogInManager logInManager,
@@ -38,7 +46,9 @@ namespace CharonX.Controllers
             TokenAuthConfiguration configuration,
             IExternalAuthConfiguration externalAuthConfiguration,
             IExternalAuthManager externalAuthManager,
-            UserRegistrationManager userRegistrationManager)
+            UserRegistrationManager userRegistrationManager,
+            IRepository<User, long> repository,
+            SmsAuthManager smsAuthManager)
         {
             _logInManager = logInManager;
             _tenantCache = tenantCache;
@@ -47,6 +57,8 @@ namespace CharonX.Controllers
             _externalAuthConfiguration = externalAuthConfiguration;
             _externalAuthManager = externalAuthManager;
             _userRegistrationManager = userRegistrationManager;
+            _repository = repository;
+            _smsAuthManager = smsAuthManager;
         }
 
         [HttpPost]
@@ -58,7 +70,9 @@ namespace CharonX.Controllers
                 GetTenancyNameOrNull()
             );
 
-            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity));
+            var tenantId = GetTenantId(loginResult);
+
+            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
 
             return new AuthenticateResultModel
             {
@@ -67,6 +81,105 @@ namespace CharonX.Controllers
                 ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
                 UserId = loginResult.User.Id
             };
+        }
+
+        private static int? GetTenantId(AbpLoginResult<Tenant, User> loginResult)
+        {
+            int? tenantId = null;
+            if (loginResult.Tenant != null)
+            {
+                tenantId = loginResult.Tenant.Id;
+            }
+
+            return tenantId;
+        }
+
+        [HttpPost]
+        public async Task<AuthenticateResultModel> AuthenticateWithSms([FromBody] SmsAuthenticateModel model)
+        {
+            string username = string.Empty;
+            string tenantName = string.Empty;
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                var user = await _repository.GetAll().SingleOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+                if (user == null)
+                {
+                    throw new UserFriendlyException("Mobile phone number not exist.");
+                }
+                username = user.UserName;
+
+                if (user.TenantId.HasValue)
+                {
+                    tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
+                }
+            }
+
+            var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
+            if (!await AuthenticateSmsCode(model.PhoneNumber, model.SmsAuthCode))
+            {
+                throw new UserFriendlyException("Sms authentication code not correct!");
+            }
+
+            int? tenantId = null;
+            if (loginResult.Tenant != null)
+            {
+                tenantId = loginResult.Tenant.Id;
+            }
+
+            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+            return new AuthenticateResultModel
+            {
+                AccessToken = accessToken,
+                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+                UserId = loginResult.User.Id
+            };
+        }
+
+        [HttpGet]
+        public async Task GetSmsAuthenticationCode(string phoneNumber)
+        {
+            if (!ValidationHelper.IsMobilePhone(phoneNumber))
+            {
+                throw new UserFriendlyException("Invalid mobile phone number.");
+            }
+
+            string authCode = await _smsAuthManager.GetSmsAuthCodeAsync(phoneNumber);
+        }
+
+        [HttpGet]
+        public async Task<bool> AuthenticateSmsCode(string phoneNumber, string smsAuthCode)
+        {
+            if (!ValidationHelper.IsMobilePhone(phoneNumber))
+            {
+                throw new UserFriendlyException("Invalid mobile phone number.");
+            }
+
+            return await _smsAuthManager.AuthenticateSmsCode(phoneNumber, smsAuthCode);
+        }
+
+        [HttpPost]
+        [AbpAuthorize(PermissionNames.Pages_Tenants)]
+        public async Task<string> GetTenantAdminToken([FromBody]GetTenantAdminToken input)
+        {
+            var tenancyName = _tenantCache.Get(input.TenantId).TenancyName;
+
+            var loginResult = await GetLoginResultAsync(
+                AbpUserBase.AdminUserName,
+                CharonX.Authorization.Users.User.DefaultPassword,
+                tenancyName
+            );
+
+            int? tenantId = null;
+            if (loginResult.Tenant != null)
+            {
+                tenantId = loginResult.Tenant.Id;
+            }
+
+            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+            return accessToken;
         }
 
         [HttpGet]
@@ -82,11 +195,13 @@ namespace CharonX.Controllers
 
             var loginResult = await _logInManager.LoginAsync(new UserLoginInfo(model.AuthProvider, model.ProviderKey, model.AuthProvider), GetTenancyNameOrNull());
 
+            var tenantId = GetTenantId(loginResult);
+
             switch (loginResult.Result)
             {
                 case AbpLoginResultType.Success:
                     {
-                        var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity));
+                        var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
                         return new ExternalAuthenticateResultModel
                         {
                             AccessToken = accessToken,
@@ -118,7 +233,7 @@ namespace CharonX.Controllers
 
                         return new ExternalAuthenticateResultModel
                         {
-                            AccessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity)),
+                            AccessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId)),
                             ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds
                         };
                     }
@@ -209,17 +324,24 @@ namespace CharonX.Controllers
             return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
         }
 
-        private static List<Claim> CreateJwtClaims(ClaimsIdentity identity)
+        private static List<Claim> CreateJwtClaims(ClaimsIdentity identity, int? tenantId)
         {
             var claims = identity.Claims.ToList();
             var nameIdClaim = claims.First(c => c.Type == ClaimTypes.NameIdentifier);
+
+            string tenantIdStr = "null";
+            if (tenantId.HasValue)
+            {
+                tenantIdStr = tenantId.ToString();
+            }
 
             // Specifically add the jti (random nonce), iat (issued timestamp), and sub (subject/user) claims.
             claims.AddRange(new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, nameIdClaim.Value),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.Now.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.Now.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new Claim("tenantId", tenantIdStr)
             });
 
             return claims;

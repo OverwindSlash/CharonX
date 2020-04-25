@@ -110,7 +110,17 @@ namespace CharonX.Roles
 
             var users = await _userManager.GetUsersInRoleAsync(role.Name);
 
-            return ObjectMapper.Map<List<UserDto>>(users);
+            List<UserDto> userDtos = new List<UserDto>();
+            foreach (User user in users)
+            {
+                UserDto userDto = ObjectMapper.Map<UserDto>(user);
+                userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
+                userDtos.Add(userDto);
+            }
+
+            return userDtos;
         }
 
         public ListResultDto<PermissionDto> GetAllAvailablePermissions()

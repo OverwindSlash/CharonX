@@ -1,13 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace CharonX.Users.Dto
 {
-    public class ResetPasswordDto
+    public class ResetTenantUserPasswordDto
     {
-        [Required]
         public long UserId { get; set; }
-
-        [Required]
         public string NewPassword { get; set; }
     }
 }

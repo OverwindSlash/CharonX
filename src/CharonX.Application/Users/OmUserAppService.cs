@@ -19,13 +19,16 @@ namespace CharonX.Users
     {
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
         public OmUserAppService(
             UserManager userManager,
-            RoleManager roleManager)
+            RoleManager roleManager,
+            IPasswordHasher<User> passwordHasher)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _passwordHasher = passwordHasher;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -79,9 +82,9 @@ namespace CharonX.Users
                 {
                     UserDto userDto = ObjectMapper.Map<UserDto>(adminUser);
 
-                    userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(adminUser);
-                    userDto.RoleNames = await GetRolesOfUserAsync(adminUser);
-                    userDto.Permissions = await GetPermissionsOfUserAsync(adminUser);
+                    userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(adminUser);
+                    userDto.RoleNames = await _userManager.GetRolesOfUserAsync(adminUser);
+                    userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(adminUser);
 
                     userDtos.Add(userDto);
                 }
@@ -99,9 +102,9 @@ namespace CharonX.Users
                     var user = await _userManager.GetUserByIdAsync(input.Id);
                     var userDto = ObjectMapper.Map<UserDto>(user);
 
-                    userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
-                    userDto.RoleNames = await GetRolesOfUserAsync(user);
-                    userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                    userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                    userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                    userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
 
                     return userDto;
                 }
@@ -110,24 +113,6 @@ namespace CharonX.Users
                     throw new UserFriendlyException(L("UserNotFound", input.Id), exception);
                 }
             }
-        }
-
-        private async Task<string[]> GetOrgUnitsOfUserAsync(User user)
-        {
-            var orgUnits = await _userManager.GetOrganizationUnitsAsync(user);
-            return orgUnits.Select(ou => ou.DisplayName).ToArray();
-        }
-
-        private async Task<string[]> GetRolesOfUserAsync(User user)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-            return roles.ToArray();
-        }
-
-        private async Task<string[]> GetPermissionsOfUserAsync(User user)
-        {
-            var permissions = await _userManager.GetGrantedPermissionsAsync(user);
-            return permissions.Select(p => p.Name).ToArray();
         }
 
         public async Task<UserDto> UpdateUserInTenantAsync(int tenantId, UserDto input)
@@ -211,6 +196,20 @@ namespace CharonX.Users
                 CheckErrors(await _userManager.UpdateAsync(user));
 
                 return true;
+            }
+        }
+
+        public async Task ResetUserPasswordInTenantAsync(int tenantId, ResetTenantUserPasswordDto input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var user = await _userManager.GetUserByIdAsync(input.UserId);
+                if (user == null)
+                {
+                    return;
+                }
+
+                user.Password = _passwordHasher.HashPassword(user, input.NewPassword);
             }
         }
 

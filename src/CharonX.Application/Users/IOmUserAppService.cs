@@ -21,5 +21,7 @@ namespace CharonX.Users
         public Task DeleteUserInTenantAsync(int tenantId, EntityDto<long> input);
 
         public Task<bool> ActivateUserInTenantAsync(int tenantId, ActivateUserDto input);
+
+        public Task ResetUserPasswordInTenantAsync(int tenantId, ResetTenantUserPasswordDto input);
     }
 }

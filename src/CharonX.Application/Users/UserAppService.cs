@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CharonX.Authorization.AuthCode;
 
 namespace CharonX.Users
 {
@@ -37,6 +38,7 @@ namespace CharonX.Users
         private readonly IAbpSession _abpSession;
         private readonly LogInManager _logInManager;
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
+        private readonly SmsAuthManager _smsAuthManager;
 
         public UserAppService(
             IRepository<User, long> repository,
@@ -46,7 +48,8 @@ namespace CharonX.Users
             IPasswordHasher<User> passwordHasher,
             IAbpSession abpSession,
             LogInManager logInManager,
-            IRepository<OrganizationUnit, long> orgUnitRepository)
+            IRepository<OrganizationUnit, long> orgUnitRepository,
+            SmsAuthManager smsAuthManager)
             : base(repository)
         {
             _repository = repository;
@@ -57,11 +60,11 @@ namespace CharonX.Users
             _abpSession = abpSession;
             _logInManager = logInManager;
             _orgUnitRepository = orgUnitRepository;
+            _smsAuthManager = smsAuthManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
-
-
+        
         public override async Task<UserDto> CreateAsync(CreateUserDto input)
         {
             CheckCreatePermission();
@@ -97,9 +100,9 @@ namespace CharonX.Users
                 var user = await _userManager.GetUserByIdAsync(input.Id);
                 var userDto = ObjectMapper.Map<UserDto>(user);
 
-                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
-                userDto.RoleNames = await GetRolesOfUserAsync(user);
-                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
 
                 return userDto;
             }
@@ -109,23 +112,7 @@ namespace CharonX.Users
             }
         }
 
-        private async Task<string[]> GetOrgUnitsOfUserAsync(User user)
-        {
-            var orgUnits = await _userManager.GetOrganizationUnitsAsync(user);
-            return orgUnits.Select(ou => ou.DisplayName).ToArray();
-        }
-
-        private async Task<string[]> GetRolesOfUserAsync(User user)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-            return roles.ToArray();
-        }
-
-        private async Task<string[]> GetPermissionsOfUserAsync(User user)
-        {
-            var permissions = await _userManager.GetGrantedPermissionsAsync(user);
-            return permissions.Select(p => p.Name).ToArray();
-        }
+        
 
         public override async Task<PagedResultDto<UserDto>> GetAllAsync(PagedUserResultRequestDto input)
         {
@@ -133,9 +120,9 @@ namespace CharonX.Users
             foreach (var userDto in pagedResult.Items)
             {
                 var user = await _userManager.GetUserByIdAsync(userDto.Id);
-                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
-                userDto.RoleNames = await GetRolesOfUserAsync(user);
-                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
             }
 
             return pagedResult;
@@ -184,9 +171,9 @@ namespace CharonX.Users
             foreach (User user in users)
             {
                 UserDto userDto = ObjectMapper.Map<UserDto>(user);
-                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
-                userDto.RoleNames = await GetRolesOfUserAsync(user);
-                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
                 userDtos.Add(userDto);
             }
 
@@ -207,9 +194,9 @@ namespace CharonX.Users
             foreach (User user in users)
             {
                 UserDto userDto = ObjectMapper.Map<UserDto>(user);
-                userDto.OrgUnitNames = await GetOrgUnitsOfUserAsync(user);
-                userDto.RoleNames = await GetRolesOfUserAsync(user);
-                userDto.Permissions = await GetPermissionsOfUserAsync(user);
+                userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
                 userDtos.Add(userDto);
             }
 
@@ -322,27 +309,25 @@ namespace CharonX.Users
             return true;
         }
 
-        public async Task<bool> ResetPassword(ResetPasswordDto input)
+        public async Task<bool> ResetUserPasswordByTenantAdmin(ResetPasswordDto input)
         {
             if (_abpSession.UserId == null)
             {
-                throw new UserFriendlyException("Please log in before attemping to reset password.");
+                throw new UserFriendlyException(L("NeedLoginAsTenantAdmin"));
             }
+
             long currentUserId = _abpSession.UserId.Value;
             var currentUser = await _userManager.GetUserByIdAsync(currentUserId);
-            var loginAsync = await _logInManager.LoginAsync(currentUser.UserName, input.AdminPassword, shouldLockout: false);
-            if (loginAsync.Result != AbpLoginResultType.Success)
-            {
-                throw new UserFriendlyException("Your 'Admin Password' did not match the one on record.  Please try again.");
-            }
+            
             if (currentUser.IsDeleted || !currentUser.IsActive)
             {
                 return false;
             }
+
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (!roles.Contains(StaticRoleNames.Tenants.Admin))
             {
-                throw new UserFriendlyException("Only administrators may reset passwords.");
+                throw new UserFriendlyException(L("NeedLoginAsTenantAdmin"));
             }
 
             var user = await _userManager.GetUserByIdAsync(input.UserId);
@@ -352,6 +337,29 @@ namespace CharonX.Users
                 CurrentUnitOfWork.SaveChanges();
             }
 
+            return true;
+        }
+
+        public async Task<bool> ResetSelfPasswordBySms(SmsResetPasswordDto input)
+        {
+            if (!await _smsAuthManager.AuthenticateSmsCode(input.PhoneNumber, input.AutoCode))
+            {
+                throw new UserFriendlyException("Wrong authentication code.");
+            }
+
+            var user = await _userManager.GetUserByIdAsync(input.UserId);
+            if (user == null)
+            {
+                throw new UserFriendlyException("User not exist.");
+            }
+
+            if (user.PhoneNumber != input.PhoneNumber)
+            {
+                throw new UserFriendlyException("Wrong mobile phone number.");
+            }
+
+            user.Password = _passwordHasher.HashPassword(user, input.NewPassword);
+            CurrentUnitOfWork.SaveChanges();
             return true;
         }
     }
