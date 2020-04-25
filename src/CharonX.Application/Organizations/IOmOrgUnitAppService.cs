@@ -4,6 +4,7 @@ using Abp.Application.Services.Dto;
 using CharonX.Organizations.Dto;
 using System.Threading.Tasks;
 using CharonX.Roles.Dto;
+using CharonX.Users.Dto;
 
 namespace CharonX.Organizations
 {
@@ -24,5 +25,11 @@ namespace CharonX.Organizations
         public Task RemoveRoleFromOrgUnitInTenantAsync(int tenantId, SetOrgUnitRoleDto input);
 
         public Task<List<RoleDto>> GetRolesInOrgUnitInTenantAsync(int tenantId, EntityDto<long> input, bool includeChildren = false);
+
+        public Task AddUserToOrgUnitInTenantAsync(int tenantId, SetOrgUnitUserDto input);
+
+        public Task RemoveUserFromOrgUnitInTenantAsync(int tenantId, SetOrgUnitUserDto input);
+
+        public Task<List<UserDto>> GetUsersInOrgUnitInTenantAsync(int tenantId, EntityDto<long> input, bool includeChildren = false);
     }
 }

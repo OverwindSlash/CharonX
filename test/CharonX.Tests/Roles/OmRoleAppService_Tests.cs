@@ -399,5 +399,111 @@ namespace CharonX.Tests.Roles
             var getUser2Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
             getUser2Dto.RoleNames.Length.ShouldBe(1);
         }
+
+        [Fact]
+        public async Task RemoveUserFromRoleInTenant_Test()
+        {
+            CreateTenantDto createTenantDto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(createTenantDto);
+
+            var createRoleDto = new CreateRoleDto()
+            {
+                Name = "RoleTest",
+                DisplayName = "Test role",
+                Description = "Role for test",
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+            };
+            var roleDto = await _omRoleAppService.CreateRoleInTenantAsync(tenantDto.Id, createRoleDto);
+
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+            var userDto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUserDto);
+
+            var getUser1Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            getUser1Dto.RoleNames.Length.ShouldBe(0);
+
+            SetRoleUserDto setRoleUserDto = new SetRoleUserDto()
+            {
+                UserId = userDto.Id,
+                RoleId = roleDto.Id
+            };
+            await _omRoleAppService.AddUserToRoleInTenantAsync(tenantDto.Id, setRoleUserDto);
+
+            var getUser2Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id,new EntityDto<long>(userDto.Id));
+            getUser2Dto.RoleNames.Length.ShouldBe(1);
+
+
+            await _omRoleAppService.RemoveUserFromRoleInTenantAsync(tenantDto.Id, setRoleUserDto);
+            var getUser3Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            getUser3Dto.RoleNames.Length.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task GetUsersInRoleInTenant_Test()
+        {
+            CreateTenantDto createTenantDto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(createTenantDto);
+
+            var createRoleDto = new CreateRoleDto()
+            {
+                Name = "RoleTest",
+                DisplayName = "Test role",
+                Description = "Role for test",
+                GrantedPermissions = new List<string>() { PermissionNames.Pages_Roles }
+            };
+            var roleDto = await _omRoleAppService.CreateRoleInTenantAsync(tenantDto.Id, createRoleDto);
+
+            CreateUserDto createUser1Dto = new CreateUserDto()
+            {
+                UserName = "TestUser1",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+            var user1Dto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUser1Dto);
+
+            SetRoleUserDto setRoleUserDto = new SetRoleUserDto()
+            {
+                UserId = user1Dto.Id,
+                RoleId = roleDto.Id
+            };
+            await _omRoleAppService.AddUserToRoleInTenantAsync(tenantDto.Id, setRoleUserDto);
+
+            CreateUserDto createUser2Dto = new CreateUserDto()
+            {
+                UserName = "TestUser2",
+                Password = User.DefaultPassword,
+                Name = "Mike",
+                Surname = "Smith",
+                PhoneNumber = "13851400002",
+                IsActive = true,
+                RoleNames = new[] { "RoleTest" }
+            };
+            var user2Dto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUser2Dto);
+
+            var roleUsers = await _omRoleAppService.GetUsersInRoleInTenantAsync(tenantDto.Id, new EntityDto<int>(roleDto.Id));
+            roleUsers.Count.ShouldBe(2);
+        }
     }
 }

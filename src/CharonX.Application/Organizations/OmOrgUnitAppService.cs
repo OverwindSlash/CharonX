@@ -1,19 +1,19 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Authorization;
+using Abp.Domain.Repositories;
+using Abp.Organizations;
+using Abp.UI;
+using CharonX.Authorization.Roles;
 using CharonX.Organizations.Dto;
+using CharonX.Roles.Dto;
+using CharonX.Users.Dto;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.Authorization;
-using Abp.Collections.Extensions;
-using Abp.Domain.Repositories;
-using Abp.Extensions;
-using Abp.Organizations;
-using Abp.UI;
-using CharonX.Authorization.Roles;
-using CharonX.Roles.Dto;
-using Microsoft.EntityFrameworkCore;
+using CharonX.Authorization.Users;
 
 namespace CharonX.Organizations
 {
@@ -23,17 +23,20 @@ namespace CharonX.Organizations
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
         private readonly IRepository<OrganizationUnitRole, long> _orgUnitRoleRepository;
         private readonly RoleManager _roleManager;
+        private readonly UserManager _userManager;
 
         public OmOrgUnitAppService(
             OrganizationUnitManager orgUnitManager,
             IRepository<OrganizationUnit, long> orgUnitRepository,
             IRepository<OrganizationUnitRole, long> orgUnitRoleRepository,
-            RoleManager roleManager)
+            RoleManager roleManager,
+            UserManager userManager)
         {
             _orgUnitManager = orgUnitManager;
             _orgUnitRepository = orgUnitRepository;
             _orgUnitRoleRepository = orgUnitRoleRepository;
             _roleManager = roleManager;
+            _userManager = userManager;
         }
 
         public async Task<OrgUnitDto> CreateOrgUnitInTenantAsync(int tenantId, CreateOrgUnitDto input)
@@ -186,7 +189,65 @@ namespace CharonX.Organizations
 
                 var roles = await _roleManager.GetRolesInOrganizationUnit(orgUnit, includeChildren);
 
-                return ObjectMapper.Map<List<RoleDto>>(roles);
+                List<RoleDto> roleDtos = ObjectMapper.Map<List<RoleDto>>(roles);
+                foreach (Role role in roles)
+                {
+                    int offset = roles.IndexOf(role);
+                    var permissions = await _roleManager.GetGrantedPermissionsAsync(role);
+                    roleDtos[offset].GrantedPermissions = permissions.Select(p => p.Name).ToList();
+                }
+
+                return roleDtos;
+            }
+        }
+
+        public async Task AddUserToOrgUnitInTenantAsync(int tenantId, SetOrgUnitUserDto input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                await CheckExistenceOfUserAndOrgUnitAsync(input);
+
+                await _userManager.AddToOrganizationUnitAsync(input.UserId, input.OrgUnitId);
+            }
+        }
+
+        private async Task CheckExistenceOfUserAndOrgUnitAsync(SetOrgUnitUserDto input)
+        {
+            try
+            {
+                var user = await _userManager.GetUserByIdAsync(input.UserId);
+                var ou = await _orgUnitRepository.GetAsync(input.OrgUnitId);
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(exception.Message);
+            }
+        }
+
+        public async Task RemoveUserFromOrgUnitInTenantAsync(int tenantId, SetOrgUnitUserDto input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                await CheckExistenceOfUserAndOrgUnitAsync(input);
+
+                await _userManager.RemoveFromOrganizationUnitAsync(input.UserId, input.OrgUnitId);
+            }
+        }
+
+        public async Task<List<UserDto>> GetUsersInOrgUnitInTenantAsync(int tenantId, EntityDto<long> input, bool includeChildren = false)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.Id == input.Id);
+
+                if (orgUnit == null)
+                {
+                    throw new UserFriendlyException(L("OrgUnitNotFound", input.Id));
+                }
+
+                var users = await _userManager.GetUsersInOrganizationUnitAsync(orgUnit, includeChildren);
+
+                return ObjectMapper.Map<List<UserDto>>(users);
             }
         }
     }
