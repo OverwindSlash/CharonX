@@ -6,15 +6,15 @@ using Abp.Linq.Extensions;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
+using CharonX.Authorization.Users;
 using CharonX.MultiTenancy;
 using CharonX.Roles.Dto;
+using CharonX.Users.Dto;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CharonX.Authorization.Users;
-using CharonX.Users.Dto;
 
 namespace CharonX.Roles
 {

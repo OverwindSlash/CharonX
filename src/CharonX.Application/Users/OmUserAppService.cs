@@ -1,20 +1,22 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Authorization;
+using Abp.IdentityFramework;
+using Abp.UI;
+using CharonX.Authorization;
+using CharonX.Authorization.Roles;
+using CharonX.Authorization.Users;
+using CharonX.Organizations;
 using CharonX.Users.Dto;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.IdentityFramework;
-using Abp.Organizations;
-using Abp.UI;
-using CharonX.Authorization.Roles;
-using CharonX.Authorization.Users;
-using CharonX.Organizations;
-using Microsoft.AspNetCore.Identity;
 
 namespace CharonX.Users
 {
+    [AbpAuthorize(PermissionNames.Pages_Tenants)]
     public class OmUserAppService : ApplicationService, IOmUserAppService
     {
         private readonly UserManager _userManager;

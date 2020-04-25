@@ -4,7 +4,9 @@ using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.Organizations;
 using Abp.UI;
+using CharonX.Authorization;
 using CharonX.Authorization.Roles;
+using CharonX.Authorization.Users;
 using CharonX.Organizations.Dto;
 using CharonX.Roles.Dto;
 using CharonX.Users.Dto;
@@ -13,10 +15,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CharonX.Authorization.Users;
 
 namespace CharonX.Organizations
 {
+    [AbpAuthorize(PermissionNames.Pages_Tenants)]
     public class OmOrgUnitAppService : ApplicationService, IOmOrgUnitAppService
     {
         private readonly OrganizationUnitManager _orgUnitManager;
