@@ -3,6 +3,7 @@ using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using CharonX.Roles.Dto;
 using System.Threading.Tasks;
+using CharonX.Features.Dto;
 using CharonX.Users.Dto;
 
 namespace CharonX.Roles
@@ -13,10 +14,12 @@ namespace CharonX.Roles
 
         Task<ListResultDto<RoleListDto>> GetRolesByPermissionAsync(GetRolesInput input);
 
-        public Task AddUserToRoleAsync(SetRoleUserDto input);
+        Task AddUserToRoleAsync(SetRoleUserDto input);
 
-        public Task RemoveUserFromRoleAsync(SetRoleUserDto input);
+        Task RemoveUserFromRoleAsync(SetRoleUserDto input);
 
-        public Task<List<UserDto>> GetUsersInRoleAsync(EntityDto<int> input);
+        Task<List<UserDto>> GetUsersInRoleAsync(EntityDto<int> input);
+
+        ListResultDto<PermissionDto> GetAllAvailablePermissions();
     }
 }

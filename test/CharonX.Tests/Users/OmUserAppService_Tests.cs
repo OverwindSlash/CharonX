@@ -189,5 +189,119 @@ namespace CharonX.Tests.Users
             allAdmins[0].UserName.ShouldBe("admin");
             allAdmins[1].UserName.ShouldBe("TestUser");
         }
+
+        [Fact]
+        public async Task UpdateUserInTenant_Test()
+        {
+            CreateTenantDto dto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(dto);
+
+            // Create user with role and orgunit (orgunit contain role)
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+
+            var userDto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUserDto);
+
+            var getUserDto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            getUserDto.Name = "Johnny";
+
+            var updatedUser = await _omUserAppService.UpdateUserInTenantAsync(tenantDto.Id, getUserDto);
+            updatedUser.FullName.ShouldBe("Johnny Smith");
+        }
+
+        [Fact]
+        public async Task DeleteUserInTenant_Test()
+        {
+            CreateTenantDto dto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(dto);
+
+            // Create user with role and orgunit (orgunit contain role)
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+
+            var userDto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUserDto);
+
+            var getUserDto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            getUserDto.Name = "Johnny";
+
+            await _omUserAppService.DeleteUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
+            await UsingDbContextAsync(async context =>
+            {
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userDto.Id && u.TenantId == tenantDto.Id);
+                user.IsDeleted.ShouldBeTrue();
+            });
+        }
+
+        [Fact]
+        public async Task ActivateUserInTenant_Test()
+        {
+            CreateTenantDto dto = new CreateTenantDto()
+            {
+                TenancyName = "TestTenant",
+                Name = "TestTenant",
+                AdminPhoneNumber = "13851400000",
+                IsActive = true
+            };
+            var tenantDto = await _tenantAppService.CreateAsync(dto);
+
+            CreateUserDto createUserDto = new CreateUserDto()
+            {
+                UserName = "TestUser",
+                Password = User.DefaultPassword,
+                Name = "John",
+                Surname = "Smith",
+                PhoneNumber = "13851400001",
+                IsActive = true
+            };
+            var userDto = await _omUserAppService.CreateUserInTenantAsync(tenantDto.Id, createUserDto);
+
+            await UsingDbContextAsync(async context =>
+            {
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userDto.Id);
+                user.FullName.ShouldBe("John Smith");
+                user.IsActive.ShouldBeTrue();
+                user.TenantId.ShouldBe(tenantDto.Id);
+            });
+
+            ActivateUserDto activateUserDto = new ActivateUserDto()
+            {
+                UserId = userDto.Id,
+                IsActive = false
+            };
+            var result = await _omUserAppService.ActivateUserInTenantAsync(tenantDto.Id, activateUserDto);
+
+            await UsingDbContextAsync(async context =>
+            {
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userDto.Id);
+                user.FullName.ShouldBe("John Smith");
+                user.IsActive.ShouldBeFalse();
+            });
+        }
     }
 }

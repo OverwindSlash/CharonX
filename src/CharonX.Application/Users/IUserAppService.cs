@@ -1,6 +1,4 @@
 using Abp.Application.Services;
-using Abp.Application.Services.Dto;
-using CharonX.Roles.Dto;
 using CharonX.Users.Dto;
 using System.Collections.Generic;
 using System.Threading.Tasks;

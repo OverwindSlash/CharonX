@@ -140,7 +140,7 @@ namespace CharonX.Tests.Features
         [Fact]
         public void GetAllPermissions_Test()
         {
-            var allPermissions = _featureAppService.GetAllPermissions();
+            var allPermissions = _featureAppService.GetAllPermissionsInSystem();
             allPermissions.Items.Count.ShouldBe(5);
         }
     }

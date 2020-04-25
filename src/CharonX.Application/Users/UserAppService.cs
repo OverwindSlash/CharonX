@@ -61,6 +61,7 @@ namespace CharonX.Users
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
 
+
         public override async Task<UserDto> CreateAsync(CreateUserDto input)
         {
             CheckCreatePermission();
@@ -76,19 +77,7 @@ namespace CharonX.Users
 
             CheckErrors(await _userManager.CreateAsync(user, input.Password));
 
-            // Set organization units and roles belongs to them
-            if (input.OrgUnitNames != null)
-            {
-                CheckErrors(await _userManager.SetOrgUnitsAsync(user, input.OrgUnitNames));
-                CurrentUnitOfWork.SaveChanges();
-            }
-
-            // Add additional roles not included in organization units
-            if (input.RoleNames != null)
-            {
-                CheckErrors(await _userManager.AddToAdditionalRolesAsync(user, input.RoleNames));
-                CurrentUnitOfWork.SaveChanges();
-            }
+            CheckErrors(await _userManager.SetOrgUnitsAndRoles(user, input.OrgUnitNames, input.RoleNames));
 
             return await GetAsync(new EntityDto<long>(user.Id));
         }
@@ -156,7 +145,16 @@ namespace CharonX.Users
         {
             CheckUpdatePermission();
 
-            var user = await _userManager.GetUserByIdAsync(input.Id);
+            User user;
+
+            try
+            {
+                user = await _userManager.GetUserByIdAsync(input.Id);
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(L("UserNotFound", input.Id), exception);
+            }
 
             if (input.PhoneNumber != user.PhoneNumber)
             {
@@ -167,19 +165,7 @@ namespace CharonX.Users
 
             CheckErrors(await _userManager.UpdateAsync(user));
 
-            // Set organization units and roles belongs to them
-            if (input.OrgUnitNames != null)
-            {
-                CheckErrors(await _userManager.SetOrgUnitsAsync(user, input.OrgUnitNames));
-                CurrentUnitOfWork.SaveChanges();
-            }
-
-            // Add additional roles not included in organization units
-            if (input.RoleNames != null)
-            {
-                CheckErrors(await _userManager.AddToAdditionalRolesAsync(user, input.RoleNames));
-                CurrentUnitOfWork.SaveChanges();
-            }
+            CheckErrors(await _userManager.SetOrgUnitsAndRoles(user, input.OrgUnitNames, input.RoleNames));
 
             return await GetAsync(new EntityDto<long>(user.Id));
         }

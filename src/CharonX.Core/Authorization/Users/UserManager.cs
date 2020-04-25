@@ -23,8 +23,7 @@ namespace CharonX.Authorization.Users
         private readonly RoleManager _roleManager;
         private readonly UserStore _store;
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
-        private readonly IRepository<UserOrganizationUnit, long> _userOrganizationUnitRepository;
-        private readonly IOrganizationUnitSettings _organizationUnitSettings;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
 
         public UserManager(
             RoleManager roleManager,
@@ -41,7 +40,8 @@ namespace CharonX.Authorization.Users
             IUnitOfWorkManager unitOfWorkManager, 
             ICacheManager cacheManager, 
             IRepository<OrganizationUnit, long> organizationUnitRepository, 
-            IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository, 
+            IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository,
+            IRepository<UserRole, long> userRoleRepository,
             IOrganizationUnitSettings organizationUnitSettings, 
             ISettingManager settingManager)
             : base(
@@ -66,33 +66,51 @@ namespace CharonX.Authorization.Users
             _roleManager = roleManager;
             _store = store;
             _orgUnitRepository = organizationUnitRepository;
-            _userOrganizationUnitRepository = userOrganizationUnitRepository;
-            _organizationUnitSettings = organizationUnitSettings;
+            _userRoleRepository = userRoleRepository;
 
             LocalizationSourceName = "CharonX";
         }
 
-        public async Task<IdentityResult> SetOrgUnitsAsync(User user, string[] orgUnitNames)
+        public async Task<IdentityResult> SetOrgUnitsAndRoles(User user, string[] orgUnitNames, string[] roleNames)
         {
-            if (user == null || orgUnitNames == null)
+            List<Role> rolesToBeGrant = new List<Role>();
+
+            // Set organization units and get roles belongs to them.
+            if ((orgUnitNames != null) && (orgUnitNames.Length != 0))
             {
-                return IdentityResult.Failed();
+                var organizationUnits = _orgUnitRepository.GetAll()
+                    .Where(ou => orgUnitNames.Contains(ou.DisplayName)).ToList();
+
+                await SetOrganizationUnitsAsync(user, organizationUnits.Select(ou => ou.Id).ToArray());
+
+                foreach (OrganizationUnit organizationUnit in organizationUnits)
+                {
+                    rolesToBeGrant.AddRange(await _roleManager.GetRolesInOrganizationUnit(organizationUnit));
+                }
             }
 
-            var organizationUnits = _orgUnitRepository.GetAll()
-                .Where(ou => orgUnitNames.Contains(ou.DisplayName)).ToList();
-
-            await SetOrganizationUnitsAsync(user, organizationUnits.Select(ou => ou.Id).ToArray());
-
-            List<Role> roles = new List<Role>();
-            foreach (OrganizationUnit organizationUnit in organizationUnits)
+            // Add additional roles not included in organization units
+            if ((roleNames != null) && (roleNames.Length != 0))
             {
-                roles.AddRange(await _roleManager.GetRolesInOrganizationUnit(organizationUnit));
+                foreach (string roleName in roleNames)
+                {
+                    var role = await _roleManager.GetRoleByNameAsync(roleName);
+                    rolesToBeGrant.Add(role);
+                }
             }
-            roles = roles.Distinct().ToList();
-            await SetRolesAsync(user, roles.Select(r => r.Name).ToArray());
 
-            return IdentityResult.Success;
+            // Remove all exist roles
+            var grantedRoles = await GetRolesAsync(user);
+            foreach (string grantedRole in grantedRoles)
+            {
+                if (await RemoveFromRoleAsync(user, grantedRole) != IdentityResult.Success)
+                {
+                    return IdentityResult.Failed();
+                }
+            }
+            
+            // Add new roles
+            return await AddToAdditionalRolesAsync(user, rolesToBeGrant.Distinct().Select(r => r.Name).ToArray());
         }
 
         public async Task<IdentityResult> AddToAdditionalRolesAsync(User user, string[] roleNames)

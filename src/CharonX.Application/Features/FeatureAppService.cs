@@ -103,7 +103,7 @@ namespace CharonX.Features
             return featureDtos;
         }
 
-        public ListResultDto<PermissionDto> GetAllPermissions()
+        public ListResultDto<PermissionDto> GetAllPermissionsInSystem()
         {
             var permissions = PermissionManager.GetAllPermissions();
 

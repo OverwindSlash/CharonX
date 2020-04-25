@@ -45,19 +45,7 @@ namespace CharonX.Users
 
                 CheckErrors(await _userManager.CreateAsync(user, input.Password));
 
-                // Set organization units and roles belongs to them
-                if (input.OrgUnitNames != null)
-                {
-                    CheckErrors(await _userManager.SetOrgUnitsAsync(user, input.OrgUnitNames));
-                    CurrentUnitOfWork.SaveChanges();
-                }
-
-                // Add additional roles not included in organization units
-                if (input.RoleNames != null)
-                {
-                    CheckErrors(await _userManager.AddToAdditionalRolesAsync(user, input.RoleNames));
-                    CurrentUnitOfWork.SaveChanges();
-                }
+                CheckErrors(await _userManager.SetOrgUnitsAndRoles(user, input.OrgUnitNames, input.RoleNames));
 
                 return await GetUserInTenantAsync(tenantId, new EntityDto<long>(user.Id));
             }
@@ -142,19 +130,88 @@ namespace CharonX.Users
             return permissions.Select(p => p.Name).ToArray();
         }
 
-        public Task<UserDto> UpdateUserInTenantAsync(int tenantId, UserDto input)
+        public async Task<UserDto> UpdateUserInTenantAsync(int tenantId, UserDto input)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                User user;
+
+                try
+                {
+                    user = await _userManager.GetUserByIdAsync(input.Id);
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(L("UserNotFound", input.Id), exception);
+                }
+
+                if (input.PhoneNumber != user.PhoneNumber)
+                {
+                    await CheckDuplicatedPhoneNumber(user);
+                }
+
+                MapToEntity(input, user);
+
+                CheckErrors(await _userManager.UpdateAsync(user));
+
+                CheckErrors(await _userManager.SetOrgUnitsAndRoles(user, input.OrgUnitNames, input.RoleNames));
+
+                return await GetUserInTenantAsync(tenantId, new EntityDto<long>(user.Id));
+            }
         }
 
-        public Task DeleteUserInTenantAsync(int tenantId, EntityDto<long> input)
+        protected void MapToEntity(UserDto input, User user)
         {
-            throw new NotImplementedException();
+            //ObjectMapper.Map(input, user);
+            user.Name = input.Name;
+            user.Surname = input.Surname;
+            user.Gender = input.Gender;
+            user.IdNumber = input.IdNumber;
+            user.PhoneNumber = input.PhoneNumber;
+            user.OfficePhoneNumber = input.OfficePhoneNumber;
+            user.City = input.City;
+            user.ExpireDate = input.ExpireDate;
+            user.EmailAddress = input.EmailAddress;
+            user.IsActive = input.IsActive;
+
+            user.SetNormalizedNames();
         }
 
-        public Task<bool> ActivateUserInTenantAsync(int tenantId, ActivateUserDto input)
+        public async Task DeleteUserInTenantAsync(int tenantId, EntityDto<long> input)
         {
-            throw new NotImplementedException();
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                User user;
+
+                try
+                {
+                    user = await _userManager.GetUserByIdAsync(input.Id);
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(L("UserNotFound", input.Id), exception);
+                }
+
+                CheckErrors(await _userManager.DeleteAsync(user));
+            }
+        }
+
+        public async Task<bool> ActivateUserInTenantAsync(int tenantId, ActivateUserDto input)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var user = await _userManager.GetUserByIdAsync(input.UserId);
+                if (user == null)
+                {
+                    return false;
+                }
+
+                user.IsActive = input.IsActive;
+
+                CheckErrors(await _userManager.UpdateAsync(user));
+
+                return true;
+            }
         }
 
         protected virtual void CheckErrors(IdentityResult identityResult)

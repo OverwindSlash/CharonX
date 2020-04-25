@@ -1,5 +1,4 @@
-﻿using System;
-using Abp.Application.Services;
+﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
@@ -8,13 +7,15 @@ using Abp.Linq.Extensions;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
+using CharonX.Authorization.Users;
+using CharonX.Features.Dto;
 using CharonX.Roles.Dto;
 using CharonX.Users.Dto;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CharonX.Authorization.Users;
 
 namespace CharonX.Roles
 {
@@ -46,7 +47,7 @@ namespace CharonX.Roles
             // CheckErrors(await _roleManager.CreateAsync(role));
             //
             // var grantedPermissions = PermissionManager
-            //     .GetAllPermissions()
+            //     .GetAllPermissionsInSystem()
             //     .Where(p => input.GrantedPermissions.Contains(p.Name))
             //     .ToList();
             //
@@ -112,6 +113,15 @@ namespace CharonX.Roles
             return ObjectMapper.Map<List<UserDto>>(users);
         }
 
+        public ListResultDto<PermissionDto> GetAllAvailablePermissions()
+        {
+            var permissions = PermissionManager.GetAllPermissions();
+
+            return new ListResultDto<PermissionDto>(
+                ObjectMapper.Map<List<PermissionDto>>(permissions).OrderBy(p => p.DisplayName).ToList()
+            );
+        }
+
         public override async Task<RoleDto> UpdateAsync(RoleDto input)
         {
             CheckUpdatePermission();
@@ -123,7 +133,7 @@ namespace CharonX.Roles
             //CheckErrors(await _roleManager.UpdateAsync(role));
 
             //var grantedPermissions = PermissionManager
-            //    .GetAllPermissions()
+            //    .GetAllPermissionsInSystem()
             //    .Where(p => input.GrantedPermissions.Contains(p.Name))
             //    .ToList();
 

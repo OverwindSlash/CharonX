@@ -308,8 +308,6 @@ namespace CharonX.Tests.Users
             var userInRole2Before = await userManager.IsInRoleAsync(user, "Role2");
             userInRole2Before.ShouldBeTrue();
 
-            var users = await userManager.GetUsersInRoleAsync("Role2");
-
             var userCount1Before = await _userAppService.GetUsersInRoleAsync("Role1");
             userCount1Before.Count.ShouldBe(1);
 
