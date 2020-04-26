@@ -56,7 +56,9 @@ namespace CharonX.Sessions
             {
                 User user = await GetCurrentUserAsync();
                 output.UserId = user.Id;
-                output.Username = user.FullName;
+                output.Fullname = user.FullName;
+                output.Surname = user.Surname;
+                output.Name = user.Name;
                 output.AvatarBase64 = CharonXConsts.DefaultAvatarBase64;
 
                 List<string> roleDisplayNames = new List<string>();
@@ -73,7 +75,7 @@ namespace CharonX.Sessions
             if (AbpSession.TenantId.HasValue)
             {
                 Tenant tenant = await GetCurrentTenantAsync();
-                output.TenancyName = tenant.TenancyName;
+                output.TenantName = tenant.TenancyName;
             }
 
             return output;

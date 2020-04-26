@@ -8,12 +8,16 @@ namespace CharonX.Sessions.Dto
     {
         public long UserId { get; set; }
 
-        public string Username { get; set; }
+        public string Fullname { get; set; }
+
+        public string Surname { get; set; }
+
+        public string Name { get; set; }
 
         public string AvatarBase64 { get; set; }
 
         public IList<string> Roles { get; set; }
 
-        public string TenancyName { get; set; }
+        public string TenantName { get; set; }
     }
 }
