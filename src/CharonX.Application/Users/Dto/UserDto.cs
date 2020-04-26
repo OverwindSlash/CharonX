@@ -59,17 +59,6 @@ namespace CharonX.Users.Dto
 
         public string[] Permissions { get; set; }
 
-        public bool IsAdmin
-        {
-            get
-            {
-                if (RoleNames != null)
-                {
-                    return RoleNames.Contains("ADMIN");
-                }
-
-                return false;
-            }
-        }
+        public bool IsAdmin { get; set; }
     }
 }

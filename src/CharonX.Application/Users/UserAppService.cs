@@ -102,6 +102,7 @@ namespace CharonX.Users
 
                 userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
                 userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                 userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
 
                 return userDto;
@@ -113,7 +114,7 @@ namespace CharonX.Users
         }
 
         
-
+            
         public override async Task<PagedResultDto<UserDto>> GetAllAsync(PagedUserResultRequestDto input)
         {
             var pagedResult = await base.GetAllAsync(input);
@@ -122,6 +123,7 @@ namespace CharonX.Users
                 var user = await _userManager.GetUserByIdAsync(userDto.Id);
                 userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
                 userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                 userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
             }
 
@@ -173,6 +175,7 @@ namespace CharonX.Users
                 UserDto userDto = ObjectMapper.Map<UserDto>(user);
                 userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
                 userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                 userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
                 userDtos.Add(userDto);
             }
@@ -196,6 +199,7 @@ namespace CharonX.Users
                 UserDto userDto = ObjectMapper.Map<UserDto>(user);
                 userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
                 userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                 userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
                 userDtos.Add(userDto);
             }

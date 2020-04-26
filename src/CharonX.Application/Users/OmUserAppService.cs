@@ -86,6 +86,7 @@ namespace CharonX.Users
 
                     userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(adminUser);
                     userDto.RoleNames = await _userManager.GetRolesOfUserAsync(adminUser);
+                    userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                     userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(adminUser);
 
                     userDtos.Add(userDto);
@@ -106,6 +107,7 @@ namespace CharonX.Users
 
                     userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
                     userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                    userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                     userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
 
                     return userDto;

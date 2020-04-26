@@ -24,8 +24,8 @@ namespace CharonX.Authorization
             var smartPassPermission = context.CreatePermission("SmartPass",
                 featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
 
-            var getAuthGroupPermission = context.CreatePermission("app:authgroup:getAuthGroup",
-                featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
+            // var getAuthGroupPermission = context.CreatePermission("app:authgroup:getAuthGroup",
+            //     featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
         }
 
         private static ILocalizableString L(string name)

@@ -116,6 +116,7 @@ namespace CharonX.Roles
                 UserDto userDto = ObjectMapper.Map<UserDto>(user);
                 userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
                 userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
                 userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
                 userDtos.Add(userDto);
             }
