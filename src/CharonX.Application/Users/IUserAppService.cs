@@ -2,6 +2,7 @@ using Abp.Application.Services;
 using CharonX.Users.Dto;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Abp.Application.Services.Dto;
 
 namespace CharonX.Users
 {
@@ -12,6 +13,8 @@ namespace CharonX.Users
         Task<List<UserDto>> GetUsersInOrgUnitAsync(string orgUnitName, bool includeChildren = false);
 
         //Task<ListResultDto<RoleDto>> GetRoles();
+
+        Task<ListResultDto<string>> GetPermissions(GetPermissionsDto input);
 
         Task ChangeLanguage(ChangeUserLanguageDto input);
 

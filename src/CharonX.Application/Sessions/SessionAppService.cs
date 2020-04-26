@@ -3,6 +3,7 @@ using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
 using CharonX.Sessions.Dto;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CharonX.MultiTenancy;
 
@@ -42,6 +43,14 @@ namespace CharonX.Sessions
             if (AbpSession.UserId.HasValue)
             {
                 output.User = ObjectMapper.Map<UserLoginInfoDto>(await GetCurrentUserAsync());
+
+                var user = await _userManager.GetUserByIdAsync(AbpSession.UserId.Value);
+                output.User = ObjectMapper.Map<UserLoginInfoDto>(user);
+
+                output.User.OrgUnits = await _userManager.GetOrgUnitsOfUserAsync(user);
+                output.User.Roles = await _userManager.GetRolesOfUserAsync(user);
+                output.User.IsAdmin = output.User.Roles.Contains("Admin");
+                output.User.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
             }
 
             return output;

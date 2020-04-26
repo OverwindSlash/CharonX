@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Abp.Authorization.Users;
 
 namespace CharonX.Users
 {
@@ -205,6 +206,31 @@ namespace CharonX.Users
             }
 
             return userDtos;
+        }
+
+        [HttpPost]
+        [AbpAllowAnonymous]
+        public async Task<ListResultDto<string>> GetPermissions(GetPermissionsDto input)
+        {
+            using (UnitOfWorkManager.Current.SetTenantId(input.TenantId))
+            {
+                try
+                {
+                    var user = await _userManager.GetUserByIdAsync(input.UserId);
+                    var userDto = ObjectMapper.Map<UserDto>(user);
+
+                    userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                    userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                    userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
+                    userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
+
+                    return new ListResultDto<string>(userDto.Permissions);
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(L("UserNotFound", input.UserId), exception);
+                }
+            }
         }
 
         // public async Task<ListResultDto<RoleDto>> GetRoles()
