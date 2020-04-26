@@ -26,6 +26,9 @@ namespace CharonX.MultiTenancy.Dto
         [StringLength(Tenant.MaxLogoLength)]
         public string Logo { get; set; }
 
+        [StringLength(Tenant.MaxLogoNodeLength)]
+        public string LogoNode { get; set; }
+
         public bool IsActive { get; set; }
     }
 }

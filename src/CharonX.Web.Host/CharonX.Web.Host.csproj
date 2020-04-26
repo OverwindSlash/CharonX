@@ -16,6 +16,9 @@
     <Product>CharonX</Product>
     <Authors>Overwind</Authors>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;NOU_UNITTEST</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Content Remove="wwwroot\swagger\ui\index.html" />
   </ItemGroup>

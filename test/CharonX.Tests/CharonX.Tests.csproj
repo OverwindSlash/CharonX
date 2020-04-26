@@ -11,6 +11,11 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="..\..\src\CharonX.Web.Host\appsettings.json" Link="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\CharonX.Application\CharonX.Application.csproj" />
     <ProjectReference Include="..\..\src\CharonX.EntityFrameworkCore\CharonX.EntityFrameworkCore.csproj" />
   </ItemGroup>

@@ -45,6 +45,9 @@ namespace CharonX.MultiTenancy.Dto
         [StringLength(Tenant.MaxLogoLength)]
         public string Logo { get; set; }
 
+        [StringLength(Tenant.MaxAddressLength)]
+        public string LogoNode { get; set; }
+
         //[StringLength(AbpTenantBase.MaxConnectionStringLength)]
         //public string ConnectionString { get; set; }
 

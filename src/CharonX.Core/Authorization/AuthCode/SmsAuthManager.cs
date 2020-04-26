@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Abp.Dependency;
+using Abp.Domain.Services;
 using Abp.Reflection.Extensions;
 using Abp.Runtime.Caching;
 using CharonX.Configuration;
@@ -9,7 +10,7 @@ using RestSharp;
 
 namespace CharonX.Authorization.AuthCode
 {
-    public class SmsAuthManager : ISingletonDependency
+    public class SmsAuthManager : DomainService
     {
         public static string SmsAuthCodeCacheName = "SmsAuthCode";
         private const string SmsAuthCodeRetryTimesKey = ":Retried";
@@ -26,6 +27,9 @@ namespace CharonX.Authorization.AuthCode
         {
             _cacheManager = cacheManager;
             _random = new Random();
+
+            string temp = typeof(CharonXCoreModule).GetAssembly().GetDirectoryPathOrNull();
+
             _configuration = AppConfigurations.Get(typeof(CharonXCoreModule).GetAssembly().GetDirectoryPathOrNull());
 
             var value = _configuration["SmsAuthCode:MaxRetryTimes"];

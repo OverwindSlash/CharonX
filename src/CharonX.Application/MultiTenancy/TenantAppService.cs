@@ -119,6 +119,7 @@ namespace CharonX.MultiTenancy
             entity.Contact = updateInput.Contact;
             entity.Address = updateInput.Address;
             entity.Logo = updateInput.Logo;
+            entity.LogoNode = updateInput.LogoNode;
             entity.IsActive = updateInput.IsActive;
         }
 
