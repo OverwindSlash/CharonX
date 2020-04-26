@@ -109,6 +109,8 @@
     <text name="TenantDeleteWarningMessage">Tenant {0} will be deleted.</text>
     <text name="PhoneNumberDuplicated">Phone number {0} duplicated.</text>
     <text name="InvalidPhoneNumber">Invalid phone number: {0}.</text>
+    <text name="PhoneNumberNotExist">Phone number: {0} not exist.</text>
+    <text name="WrongSmsAuthCode">Sms authentication code not correct!</text>
     <text name="InvalidEmailAddress">Invalid email address: {0}.</text>
     <text name="NeedLoginAsTenantAdmin">Please log in as tenant administrator before attempting to reset password.</text>
     <text name="SearchWithThreeDot">Search...</text>

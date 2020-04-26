@@ -11,7 +11,7 @@ namespace CharonX.Users.Dto
         public string PhoneNumber { get; set; }
 
         [Required]
-        public string AutoCode { get; set; }
+        public string AuthCode { get; set; }
 
         [Required]
         public long UserId { get; set; }

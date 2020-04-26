@@ -16,10 +16,15 @@ namespace CharonX.Authorization
             context.CreatePermission(PermissionNames.Pages_Tenants, L("Tenants"), multiTenancySides: MultiTenancySides.Host);
 
             // Business features permissions
+            // For smart security
             var smartSecurityPermission = context.CreatePermission("SmartSecurity",
                 featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartSecurityFeature));
 
+            // For smart pass
             var smartPassPermission = context.CreatePermission("SmartPass",
+                featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
+
+            var getAuthGroupPermission = context.CreatePermission("app:authgroup:getAuthGroup",
                 featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
         }
 

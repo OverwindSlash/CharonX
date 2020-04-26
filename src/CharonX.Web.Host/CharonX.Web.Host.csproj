@@ -12,6 +12,9 @@
     <LangVersion>7.2</LangVersion>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
+    <Company>Pensees</Company>
+    <Product>CharonX</Product>
+    <Authors>Overwind</Authors>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="wwwroot\swagger\ui\index.html" />

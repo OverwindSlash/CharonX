@@ -104,7 +104,7 @@ namespace CharonX.Controllers
                 var user = await _repository.GetAll().SingleOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
                 if (user == null)
                 {
-                    throw new UserFriendlyException("Mobile phone number not exist.");
+                    throw new UserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
                 }
                 username = user.UserName;
 
@@ -117,7 +117,7 @@ namespace CharonX.Controllers
             var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
             if (!await AuthenticateSmsCode(model.PhoneNumber, model.SmsAuthCode))
             {
-                throw new UserFriendlyException("Sms authentication code not correct!");
+                throw new UserFriendlyException(L("WrongSmsAuthCode"));
             }
 
             int? tenantId = null;
@@ -142,7 +142,7 @@ namespace CharonX.Controllers
         {
             if (!ValidationHelper.IsMobilePhone(phoneNumber))
             {
-                throw new UserFriendlyException("Invalid mobile phone number.");
+                throw new UserFriendlyException(L("InvalidPhoneNumber", phoneNumber));
             }
 
             string authCode = await _smsAuthManager.GetSmsAuthCodeAsync(phoneNumber);
@@ -153,7 +153,7 @@ namespace CharonX.Controllers
         {
             if (!ValidationHelper.IsMobilePhone(phoneNumber))
             {
-                throw new UserFriendlyException("Invalid mobile phone number.");
+                throw new UserFriendlyException(L("InvalidPhoneNumber", phoneNumber));
             }
 
             return await _smsAuthManager.AuthenticateSmsCode(phoneNumber, smsAuthCode);

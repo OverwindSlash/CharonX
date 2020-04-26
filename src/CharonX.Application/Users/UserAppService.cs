@@ -12,6 +12,7 @@ using Abp.Runtime.Session;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Accounts;
+using CharonX.Authorization.AuthCode;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
 using CharonX.Users.Dto;
@@ -23,7 +24,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CharonX.Authorization.AuthCode;
 
 namespace CharonX.Users
 {
@@ -342,7 +342,7 @@ namespace CharonX.Users
 
         public async Task<bool> ResetSelfPasswordBySms(SmsResetPasswordDto input)
         {
-            if (!await _smsAuthManager.AuthenticateSmsCode(input.PhoneNumber, input.AutoCode))
+            if (!await _smsAuthManager.AuthenticateSmsCode(input.PhoneNumber, input.AuthCode))
             {
                 throw new UserFriendlyException("Wrong authentication code.");
             }

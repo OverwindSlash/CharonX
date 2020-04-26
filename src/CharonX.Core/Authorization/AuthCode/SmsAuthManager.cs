@@ -20,6 +20,7 @@ namespace CharonX.Authorization.AuthCode
         private readonly int _maxRetryTimes;
         private readonly string _smsServerUri;
         private readonly Random _random;
+        private bool _inDebugMode;
 
         public SmsAuthManager(ICacheManager cacheManager)
         {
@@ -35,7 +36,10 @@ namespace CharonX.Authorization.AuthCode
             }
 
             _smsServerUri = _configuration["SmsAuthCode:SmsServerAddress"];
+
+            _inDebugMode = bool.Parse(_configuration["SmsAuthCode:DebugMode"]);
         }
+
 
         public async Task<string> GetSmsAuthCodeAsync(string phoneNumber)
         {
@@ -48,7 +52,10 @@ namespace CharonX.Authorization.AuthCode
             string retryKey = phoneNumber + SmsAuthCodeRetryTimesKey;
             await smsAuthCache.SetAsync(retryKey, 0);
 
-            SendAuthCodeSms(phoneNumber, authCode);
+            if (!_inDebugMode)
+            {
+                SendAuthCodeSms(phoneNumber, authCode);
+            }
 
             return authCode;
         }
@@ -120,6 +127,11 @@ namespace CharonX.Authorization.AuthCode
 
         private Task<string> GenerateSmsAuthCode()
         {
+            if (_inDebugMode)
+            {
+                return Task.FromResult("111111");
+            }
+
             int randomCode = _random.Next(100000, 999999);
             return Task.FromResult(randomCode.ToString());
         }
