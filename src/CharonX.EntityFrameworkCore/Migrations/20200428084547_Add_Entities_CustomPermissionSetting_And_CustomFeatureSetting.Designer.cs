@@ -3,14 +3,16 @@ using System;
 using CharonX.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CharonX.Migrations
 {
     [DbContext(typeof(CharonXDbContext))]
-    partial class CharonXDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200428084547_Add_Entities_CustomPermissionSetting_And_CustomFeatureSetting")]
+    partial class Add_Entities_CustomPermissionSetting_And_CustomFeatureSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1506,10 +1508,7 @@ namespace CharonX.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("LocalizationEn")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("LocalizationZh")
+                    b.Property<string>("Localization")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<string>("Name")
@@ -1529,10 +1528,7 @@ namespace CharonX.Migrations
                     b.Property<string>("FeatureDependency")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
-                    b.Property<string>("LocalizationEn")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("LocalizationZh")
+                    b.Property<string>("Localization")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<string>("Name")
