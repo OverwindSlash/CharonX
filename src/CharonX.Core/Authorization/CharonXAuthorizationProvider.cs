@@ -28,14 +28,6 @@ namespace CharonX.Authorization
 
         public override void SetPermissions(IPermissionDefinitionContext context)
         {
-            //using (var unitOfWork = unitOfWorkManager.Begin())
-            //{
-            //    using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
-            //    {
-            //        var users = _userRepository.GetAllList();
-            //    }
-            //}
-
             // Abp native permissions
             context.CreatePermission(PermissionNames.Pages_Users, L("Users"));
             context.CreatePermission(PermissionNames.Pages_Roles, L("Roles"));

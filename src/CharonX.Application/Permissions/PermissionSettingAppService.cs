@@ -4,6 +4,7 @@ using Abp.Authorization;
 using Abp.AutoMapper;
 using Abp.Configuration;
 using Abp.Domain.Repositories;
+using CharonX.Authorization;
 using CharonX.Entities;
 using CharonX.Permissions.Dto;
 using System;
@@ -16,6 +17,7 @@ namespace CharonX.Permissions
     /// <summary>
     /// 自定义权限
     /// </summary>
+    [AbpAuthorize(PermissionNames.Pages_Tenants)]
     public class PermissionSettingAppService : ApplicationService, IPermissionSettingAppService
     {
         private readonly IRepository<CustomPermissionSetting> permissionRepository;
