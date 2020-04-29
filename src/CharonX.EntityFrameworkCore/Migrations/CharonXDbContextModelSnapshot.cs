@@ -1500,49 +1500,6 @@ namespace CharonX.Migrations
                     b.ToTable("AbpUsers");
                 });
 
-            modelBuilder.Entity("CharonX.Entities.CustomFeatureSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("LocalizationEn")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("LocalizationZh")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CustomFeatureSettings");
-                });
-
-            modelBuilder.Entity("CharonX.Entities.CustomPermissionSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("FeatureDependency")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("LocalizationEn")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("LocalizationZh")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CustomPermissionSettings");
-                });
-
             modelBuilder.Entity("CharonX.MultiTenancy.Tenant", b =>
                 {
                     b.Property<int>("Id")
