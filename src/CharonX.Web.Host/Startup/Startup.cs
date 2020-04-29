@@ -19,6 +19,8 @@ using Abp.Dependency;
 using Abp.Json;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
+using System.IO;
+using CharonX.Features;
 
 namespace CharonX.Web.Host.Startup
 {
@@ -88,6 +90,10 @@ namespace CharonX.Web.Host.Startup
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey
                 });
+
+                var basePath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+                var xmlPath = Path.Combine(basePath, "CharonX.Application.xml");
+                options.IncludeXmlComments(xmlPath);
             });
 
             // Configure Abp and Dependency Injection
@@ -102,7 +108,7 @@ namespace CharonX.Web.Host.Startup
         public void Configure(IApplicationBuilder app,  ILoggerFactory loggerFactory)
         {
             app.UseAbp(options => { options.UseAbpRequestLocalization = false; }); // Initializes ABP framework.
-
+            
             app.UseCors(_defaultCorsPolicyName); // Enable CORS!
 
             app.UseStaticFiles();

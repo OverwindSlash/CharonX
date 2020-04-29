@@ -34,7 +34,12 @@ namespace CharonX.Users
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
-
+        /// <summary>
+        /// 运维专用：对指定租户创建一个用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<UserDto> CreateUserInTenantAsync(int tenantId, CreateUserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -63,14 +68,23 @@ namespace CharonX.Users
                 throw new UserFriendlyException(L("PhoneNumberDuplicated", user.PhoneNumber));
             }
         }
-
+        /// <summary>
+        /// 运维专用：创建指定租户的管理员用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<UserDto> CreateAdminUserInTenantAsync(int tenantId, CreateUserDto input)
         {
             input.OrgUnitNames = input.OrgUnitNames.Append(OrganizationUnitHelper.DefaultAdminOrgUnitName).ToArray();
 
             return await CreateUserInTenantAsync(tenantId, input);
         }
-
+        /// <summary>
+        /// 运维专用：获取指定租户的全部管理员用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -95,7 +109,12 @@ namespace CharonX.Users
                 return userDtos;
             }
         }
-
+        /// <summary>
+        /// 运维专用：获取指定租户的某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<UserDto> GetUserInTenantAsync(int tenantId, EntityDto<long> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -118,7 +137,12 @@ namespace CharonX.Users
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：更新指定租户的某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<UserDto> UpdateUserInTenantAsync(int tenantId, UserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -165,7 +189,12 @@ namespace CharonX.Users
 
             user.SetNormalizedNames();
         }
-
+        /// <summary>
+        /// 运维专用：删除指定租户的某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task DeleteUserInTenantAsync(int tenantId, EntityDto<long> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -184,7 +213,12 @@ namespace CharonX.Users
                 CheckErrors(await _userManager.DeleteAsync(user));
             }
         }
-
+        /// <summary>
+        /// 运维专用：激活指定租户下的某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<bool> ActivateUserInTenantAsync(int tenantId, ActivateUserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -202,7 +236,12 @@ namespace CharonX.Users
                 return true;
             }
         }
-
+        /// <summary>
+        /// 运维专用：重置指定租户下某一用户的密码
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task ResetUserPasswordInTenantAsync(int tenantId, ResetTenantUserPasswordDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))

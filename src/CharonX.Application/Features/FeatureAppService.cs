@@ -5,6 +5,7 @@ using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Configuration.Startup;
 using Abp.Dependency;
+using Abp.Domain.Repositories;
 using Abp.Localization;
 using Abp.UI;
 using CharonX.Authorization;
@@ -26,6 +27,7 @@ namespace CharonX.Features
         private readonly TenantManager _tenantManager;
         private readonly RoleManager _roleManager;
         private readonly IAuthorizationConfiguration _authorizationConfiguration;
+        private readonly IRepository<FeatureSetting, long> _featureRepository;
 
         public FeatureAppService(
             IFeatureManager featureManager,
@@ -33,6 +35,7 @@ namespace CharonX.Features
             IIocManager iocManager,
             TenantManager tenantManager,
             RoleManager roleManager,
+            IRepository<FeatureSetting, long> featureRepository,
             IAuthorizationConfiguration authorizationConfiguration)
         {
             _featureManager = featureManager;
@@ -41,8 +44,13 @@ namespace CharonX.Features
             _tenantManager = tenantManager;
             _roleManager = roleManager;
             _authorizationConfiguration = authorizationConfiguration;
+            _featureRepository = featureRepository;
         }
 
+        /// <summary>
+        /// 获取全部功能包
+        /// </summary>
+        /// <returns></returns>
         public List<FeatureDto> ListAllFeatures()
         {
             var features = _featureManager.GetAll();
@@ -56,7 +64,11 @@ namespace CharonX.Features
 
             return dtos;
         }
-
+        /// <summary>
+        /// 开通租户的权限包
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<bool> EnableFeatureForTenantAsync(EnableFeatureDto input)
         {
             var tenant = await _tenantManager.GetByIdAsync(input.TenantId);
@@ -82,7 +94,11 @@ namespace CharonX.Features
             await _tenantManager.SetFeatureValuesAsync(tenant.Id,
                 input.FeatureNames.Select(f => new NameValue(f, "true")).ToArray());
         }
-
+        /// <summary>
+        /// 获取特定租户的全部功能包
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
         public async Task<List<FeatureDto>> ListAllFeaturesInTenantAsync(int tenantId)
         {
             var features = await _tenantManager.GetFeatureValuesAsync(tenantId);
@@ -102,7 +118,10 @@ namespace CharonX.Features
 
             return featureDtos;
         }
-
+        /// <summary>
+        /// 获取系统管理员的所有权限
+        /// </summary>
+        /// <returns></returns>
         public ListResultDto<PermissionDto> GetAllPermissionsInSystem()
         {
             var permissions = PermissionManager.GetAllPermissions();
@@ -111,6 +130,11 @@ namespace CharonX.Features
                 ObjectMapper.Map<List<PermissionDto>>(permissions).OrderBy(p => p.DisplayName).ToList());
         }
 
+        /// <summary>
+        /// 获取特定租户的所有权限
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <returns></returns>
         public async Task<ListResultDto<PermissionDto>> GetTenantPermissionsAsync(int tenantId)
         {
             Tenant tenant = await _tenantManager.GetAvailableTenantById(tenantId);

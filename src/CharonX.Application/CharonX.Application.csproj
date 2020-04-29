@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <VersionPrefix>1.0.0.0</VersionPrefix>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -9,6 +9,14 @@
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <RootNamespace>CharonX</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>F:\DataProduct\CharonX\src\CharonX.Web.Host\bin\Debug\netcoreapp3.1\</OutputPath>
+    <DocumentationFile>F:\DataProduct\CharonX\src\CharonX.Web.Host\bin\Debug\netcoreapp3.1\CharonX.Application.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>F:\DataProduct\CharonX\src\CharonX.Web.Host\bin\Release\netcoreapp3.1\</OutputPath>
+    <DocumentationFile>F:\DataProduct\CharonX\src\CharonX.Web.Host\bin\Release\netcoreapp3.1\CharonX.Application.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CharonX.Core\CharonX.Core.csproj" />
