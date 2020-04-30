@@ -91,9 +91,9 @@ namespace CharonX.Web.Host.Startup
                     Type = SecuritySchemeType.ApiKey
                 });
 
-                //var basePath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
-                //var xmlPath = Path.Combine(basePath, "CharonX.Application.xml");
-                //options.IncludeXmlComments(xmlPath);
+                var basePath = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+                var xmlPath = Path.Combine(basePath, "CharonX.Application.xml");
+                options.IncludeXmlComments(xmlPath);
             });
 
             // Configure Abp and Dependency Injection

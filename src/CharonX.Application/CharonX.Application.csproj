@@ -11,12 +11,12 @@
     <RootNamespace>CharonX</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath></OutputPath>
-    <DocumentationFile></DocumentationFile>
+    <OutputPath>bin\Debug\netcoreapp3.1\</OutputPath>
+    <DocumentationFile>bin\Debug\netcoreapp3.1\CharonX.Application.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath></OutputPath>
-    <DocumentationFile></DocumentationFile>
+    <OutputPath>bin\Release\netcoreapp3.1\</OutputPath>
+    <DocumentationFile>bin\Release\netcoreapp3.1\CharonX.Application.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CharonX.Core\CharonX.Core.csproj" />
