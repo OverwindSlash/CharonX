@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Domain.Uow;
 
 namespace CharonX.Users
 {
@@ -51,7 +52,8 @@ namespace CharonX.Users
 
                 await _userManager.InitializeOptionsAsync(AbpSession.TenantId);
 
-                await CheckDuplicatedPhoneNumber(user);
+                await CheckDuplicatedPhoneNumber(user.PhoneNumber);
+                await CheckDuplicatedEmail(user.EmailAddress);
 
                 CheckErrors(await _userManager.CreateAsync(user, input.Password));
 
@@ -61,13 +63,28 @@ namespace CharonX.Users
             }
         }
 
-        private async Task CheckDuplicatedPhoneNumber(User user)
+        private async Task CheckDuplicatedPhoneNumber(string phoneNumber)
         {
-            if (await _userManager.CheckDuplicateMobilePhoneAsync(user.PhoneNumber))
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
             {
-                throw new UserFriendlyException(L("PhoneNumberDuplicated", user.PhoneNumber));
+                if (await _userManager.CheckDuplicateMobilePhoneAsync(phoneNumber))
+                {
+                    throw new UserFriendlyException(L("PhoneNumberDuplicated", phoneNumber));
+                }
             }
         }
+
+        private async Task CheckDuplicatedEmail(string email)
+        {
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                if (await _userManager.CheckDuplicateEmailAsync(email))
+                {
+                    throw new UserFriendlyException(L("EmailAddressDuplicated", email));
+                }
+            }
+        }
+
         /// <summary>
         /// 运维专用：创建指定租户的管理员用户
         /// </summary>
@@ -160,7 +177,12 @@ namespace CharonX.Users
 
                 if (input.PhoneNumber != user.PhoneNumber)
                 {
-                    await CheckDuplicatedPhoneNumber(user);
+                    await CheckDuplicatedPhoneNumber(user.PhoneNumber);
+                }
+
+                if (input.EmailAddress != user.EmailAddress)
+                {
+                    await CheckDuplicatedEmail(user.EmailAddress);
                 }
 
                 MapToEntity(input, user);

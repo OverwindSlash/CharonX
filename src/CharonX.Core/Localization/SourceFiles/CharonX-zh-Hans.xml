@@ -106,6 +106,7 @@
     <text name="PhoneNumberNotExist">手机号 {0} 不存在.</text>
     <text name="WrongSmsAuthCode">短信验证码不正确</text>
     <text name="InvalidPhoneNumber">不正确的手机号: {0}.</text>
+    <text name="EmailAddressDuplicated">电子邮件地址 {0} 已存在.</text>
     <text name="InvalidEmailAddress">不正确的邮件地址: {0}.</text>
     <text name="NeedLoginAsTenantAdmin">需要以租户管理员身份登录才可重置密码</text>
 

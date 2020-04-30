@@ -16,6 +16,8 @@ using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Domain.Uow;
+using Abp.UI;
 
 namespace CharonX.MultiTenancy
 {
@@ -45,6 +47,8 @@ namespace CharonX.MultiTenancy
             _roleManager = roleManager;
             _orgUnitManager = orgUnitManager;
             _abpZeroDbMigrator = abpZeroDbMigrator;
+
+            LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
 
         public override async Task<TenantDto> CreateAsync(CreateTenantDto input)
@@ -62,6 +66,9 @@ namespace CharonX.MultiTenancy
             {
                 tenant.EditionId = defaultEdition.Id;
             }
+
+            await CheckDuplicatedPhoneNumber(input.AdminPhoneNumber);
+            await CheckDuplicatedEmail(input.AdminEmailAddress);
 
             await _tenantManager.CreateAsync(tenant);
             await CurrentUnitOfWork.SaveChangesAsync(); // To get new tenant's id.
@@ -102,6 +109,28 @@ namespace CharonX.MultiTenancy
             }
 
             return MapToEntityDto(tenant);
+        }
+
+        private async Task CheckDuplicatedPhoneNumber(string phoneNumber)
+        {
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                if (await _userManager.CheckDuplicateMobilePhoneAsync(phoneNumber))
+                {
+                    throw new UserFriendlyException(L("PhoneNumberDuplicated", phoneNumber));
+                }
+            }
+        }
+
+        private async Task CheckDuplicatedEmail(string email)
+        {
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                if (await _userManager.CheckDuplicateEmailAsync(email))
+                {
+                    throw new UserFriendlyException(L("EmailAddressDuplicated", email));
+                }
+            }
         }
 
         protected override IQueryable<Tenant> CreateFilteredQuery(PagedTenantResultRequestDto input)
