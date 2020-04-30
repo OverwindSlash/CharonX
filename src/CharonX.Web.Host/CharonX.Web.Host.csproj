@@ -21,6 +21,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;NOU_UNITTEST</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Content Remove="wwwroot\swagger\ui\index.html" />
   </ItemGroup>

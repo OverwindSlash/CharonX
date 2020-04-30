@@ -36,7 +36,11 @@ namespace CharonX.Roles
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
-
+        /// <summary>
+        /// 对当前租户创建一个角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task<RoleDto> CreateAsync(CreateRoleDto input)
         {
             CheckCreatePermission();
@@ -57,7 +61,11 @@ namespace CharonX.Roles
 
             return MapToEntityDto(role);
         }
-
+        /// <summary>
+        /// 获取当前租户下具有指定权限的所有角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<ListResultDto<RoleListDto>> GetRolesByPermissionAsync(GetRolesInput input)
         {
              var roles = await _roleManager
@@ -70,7 +78,11 @@ namespace CharonX.Roles
 
             return new ListResultDto<RoleListDto>(ObjectMapper.Map<List<RoleListDto>>(roles));
         }
-
+        /// <summary>
+        /// 对当前租户的指定角色添加一个用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task AddUserToRoleAsync(SetRoleUserDto input)
         {
             try
@@ -84,7 +96,11 @@ namespace CharonX.Roles
                 throw new UserFriendlyException(exception.Message);
             }
         }
-
+        /// <summary>
+        /// 删除当前租户下指定角色的某一用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task RemoveUserFromRoleAsync(SetRoleUserDto input)
         {
             try
@@ -98,7 +114,11 @@ namespace CharonX.Roles
                 throw new UserFriendlyException(exception.Message);
             }
         }
-
+        /// <summary>
+        /// 获取当前租户下指定角色的所有用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetUsersInRoleAsync(EntityDto<int> input)
         {
             var role = await _roleManager.GetRoleByIdAsync(input.Id);
@@ -123,7 +143,10 @@ namespace CharonX.Roles
 
             return userDtos;
         }
-
+        /// <summary>
+        /// 获取当前租户的所有权限
+        /// </summary>
+        /// <returns></returns>
         public ListResultDto<PermissionDto> GetAllAvailablePermissions()
         {
             var permissions = PermissionManager.GetAllPermissions();
@@ -132,7 +155,11 @@ namespace CharonX.Roles
                 ObjectMapper.Map<List<PermissionDto>>(permissions).OrderBy(p => p.DisplayName).ToList()
             );
         }
-
+        /// <summary>
+        /// 更新当前租户的某一角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task<RoleDto> UpdateAsync(RoleDto input)
         {
             CheckUpdatePermission();
@@ -154,7 +181,11 @@ namespace CharonX.Roles
 
             return MapToEntityDto(role);
         }
-
+        /// <summary>
+        /// 删除当前租户的某一角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task DeleteAsync(EntityDto<int> input)
         {
             CheckDeletePermission();
@@ -195,6 +226,11 @@ namespace CharonX.Roles
             return query.OrderBy(r => r.DisplayName);
         }
 
+        /// <summary>
+        /// 获取当前租户下指定角色的详细信息
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<GetRoleForEditOutput> GetRoleForEdit(EntityDto input)
         {
             var permissions = PermissionManager.GetAllPermissions();

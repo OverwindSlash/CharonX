@@ -65,7 +65,11 @@ namespace CharonX.Users
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
-        
+        /// <summary>
+        /// 对当前租户创建一个用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task<UserDto> CreateAsync(CreateUserDto input)
         {
             CheckCreatePermission();
@@ -93,7 +97,11 @@ namespace CharonX.Users
                 throw new UserFriendlyException(L("PhoneNumberDuplicated", user.PhoneNumber));
             }
         }
-
+        /// <summary>
+        /// 获取当前租户的某一用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task<UserDto> GetAsync(EntityDto<long> input)
         {
             try
@@ -114,8 +122,11 @@ namespace CharonX.Users
             }
         }
 
-        
-            
+        /// <summary>
+        /// 获取当前租户下的全部用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task<PagedResultDto<UserDto>> GetAllAsync(PagedUserResultRequestDto input)
         {
             var pagedResult = await base.GetAllAsync(input);
@@ -130,7 +141,11 @@ namespace CharonX.Users
 
             return pagedResult;
         }
-
+        /// <summary>
+        /// 更新当前租户的某一用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task<UserDto> UpdateAsync(UserDto input)
         {
             CheckUpdatePermission();
@@ -159,13 +174,21 @@ namespace CharonX.Users
 
             return await GetAsync(new EntityDto<long>(user.Id));
         }
-
+        /// <summary>
+        /// 删除当前租户的某一用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override async Task DeleteAsync(EntityDto<long> input)
         {
             var user = await _userManager.GetUserByIdAsync(input.Id);
             await _userManager.DeleteAsync(user);
         }
-
+        /// <summary>
+        /// 获取当前租户中指定角色下的所有用户
+        /// </summary>
+        /// <param name="roleName"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetUsersInRoleAsync(string roleName)
         {
             List<UserDto> userDtos = new List<UserDto>();
@@ -183,7 +206,12 @@ namespace CharonX.Users
 
             return userDtos;
         }
-
+        /// <summary>
+        /// 获取当前租户指定组织中的所有用户
+        /// </summary>
+        /// <param name="orgUnitName"></param>
+        /// <param name="includeChildren"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetUsersInOrgUnitAsync(string orgUnitName, bool includeChildren = false)
         {
             List<UserDto> userDtos = new List<UserDto>();
@@ -207,7 +235,11 @@ namespace CharonX.Users
 
             return userDtos;
         }
-
+        /// <summary>
+        /// 获取指定租户中某一用户的所有权限
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         [HttpPost]
         [AbpAllowAnonymous]
         public async Task<ListResultDto<string>> GetPermissions(GetPermissionsDto input)
@@ -300,7 +332,11 @@ namespace CharonX.Users
         {
             identityResult.CheckErrors(LocalizationManager);
         }
-
+        /// <summary>
+        /// 修改当前登录用户的密码
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<bool> ChangePassword(ChangePasswordDto input)
         {
             if (_abpSession.UserId == null)
@@ -322,7 +358,11 @@ namespace CharonX.Users
             CurrentUnitOfWork.SaveChanges();
             return true;
         }
-
+        /// <summary>
+        /// 激活指定用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         [HttpPut]
         public async Task<bool> ActivateUser(ActivateUserDto input)
         {
@@ -338,7 +378,11 @@ namespace CharonX.Users
 
             return true;
         }
-
+        /// <summary>
+        /// 通过当前租户管理员修改指定用户密码
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<bool> ResetUserPasswordByTenantAdmin(ResetPasswordDto input)
         {
             if (_abpSession.UserId == null)
@@ -369,7 +413,11 @@ namespace CharonX.Users
 
             return true;
         }
-
+        /// <summary>
+        /// 通过短信重置指定用户的密码
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<bool> ResetSelfPasswordBySms(SmsResetPasswordDto input)
         {
             if (!await _smsAuthManager.AuthenticateSmsCode(input.PhoneNumber, input.AuthCode))

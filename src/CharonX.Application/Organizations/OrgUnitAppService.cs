@@ -40,7 +40,11 @@ namespace CharonX.Organizations
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
-
+        /// <summary>
+        /// 创建当前租户下的组织
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<OrgUnitDto> CreateAsync(CreateOrgUnitDto input)
         {
             var orgUnit = ObjectMapper.Map<OrganizationUnit>(input);
@@ -51,7 +55,11 @@ namespace CharonX.Organizations
 
             return await GenerateOrgUnitDtoAsync(orgUnit);
         }
-
+        /// <summary>
+        /// 获取当前租户下的指定组织
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<OrgUnitDto> GetAsync(EntityDto<long> input)
         {
             var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.Id == input.Id);
@@ -75,7 +83,11 @@ namespace CharonX.Organizations
 
             return orgUnitDto;
         }
-
+        /// <summary>
+        /// 获取当前租户下的全部组织
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<PagedResultDto<OrgUnitDto>> GetAllAsync(PagedResultRequestDto input)
         {
             var query = _orgUnitRepository.GetAll();
@@ -94,7 +106,11 @@ namespace CharonX.Organizations
 
             return new PagedResultDto<OrgUnitDto>(totalCount, orgUnitDtos);
         }
-
+        /// <summary>
+        /// 更新当前租户下的特定组织
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<OrgUnitDto> UpdateAsync(OrgUnitDto input)
         {
             var orgUnit = await _orgUnitRepository
@@ -112,12 +128,20 @@ namespace CharonX.Organizations
 
             return ObjectMapper.Map<OrgUnitDto>(orgUnit);
         }
-
+        /// <summary>
+        /// 删除当前租户下的特定组织
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task DeleteAsync(EntityDto<long> input)
         {
             await _orgUnitManager.DeleteAsync(input.Id);
         }
-
+        /// <summary>
+        /// 对当前租户下的特定组织添加一个角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task AddRoleToOrgUnitAsync(SetOrgUnitRoleDto input)
         {
             await CheckExistenceOfRoleAndOrgUnitAsync(input);
@@ -137,14 +161,23 @@ namespace CharonX.Organizations
                 throw new UserFriendlyException(exception.Message);
             }
         }
-
+        /// <summary>
+        /// 对当前租户下的特定组织删除某一角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task RemoveRoleFromOrgUnitAsync(SetOrgUnitRoleDto input)
         {
             await CheckExistenceOfRoleAndOrgUnitAsync(input);
 
             await _roleManager.RemoveFromOrganizationUnitAsync(input.RoleId, input.OrgUnitId);
         }
-
+        /// <summary>
+        /// 获取当前租户下指定组织的全部角色
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="includeChildren"></param>
+        /// <returns></returns>
         public async Task<List<RoleDto>> GetRolesInOrgUnitAsync(EntityDto<long> input, bool includeChildren = false)
         {
             var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.Id == input.Id);
@@ -166,7 +199,11 @@ namespace CharonX.Organizations
 
             return roleDtos;
         }
-
+        /// <summary>
+        /// 对当前租户下指定组织添加一个用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task AddUserToOrgUnitAsync(SetOrgUnitUserDto input)
         {
             await CheckExistenceOfUserAndOrgUnitAsync(input);
@@ -186,14 +223,23 @@ namespace CharonX.Organizations
                 throw new UserFriendlyException(exception.Message);
             }
         }
-
+        /// <summary>
+        /// 删除当前租户下指定组织的某一用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task RemoveUserFromOrgUnitAsync(SetOrgUnitUserDto input)
         {
             await CheckExistenceOfUserAndOrgUnitAsync(input);
 
             await _userManager.RemoveFromOrganizationUnitAsync(input.UserId, input.OrgUnitId);
         }
-
+        /// <summary>
+        /// 获取当前租户下指定组织的全部用户
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="includeChildren"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetUsersInOrgUnitAsync(EntityDto<long> input, bool includeChildren = false)
         {
             var orgUnit = await _orgUnitRepository.FirstOrDefaultAsync(ou => ou.Id == input.Id);

@@ -40,7 +40,12 @@ namespace CharonX.Organizations
             _roleManager = roleManager;
             _userManager = userManager;
         }
-
+        /// <summary>
+        /// 运维专用：创建特定租户下的组织
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<OrgUnitDto> CreateOrgUnitInTenantAsync(int tenantId, CreateOrgUnitDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -72,6 +77,12 @@ namespace CharonX.Organizations
             return orgUnitDto;
         }
 
+        /// <summary>
+        /// 运维专用：获取特定租户下的指定组织
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<OrgUnitDto> GetOrgUnitInTenantAsync(int tenantId, EntityDto<long> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -82,6 +93,12 @@ namespace CharonX.Organizations
             }
         }
 
+        /// <summary>
+        /// 运维专用：获取特定租户下的所有组织
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<ListResultDto<OrgUnitDto>> GetAllOrgUnitInTenantAsync(int tenantId, GetOrgUnitsInput input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -114,6 +131,12 @@ namespace CharonX.Organizations
             }
         }
 
+        /// <summary>
+        /// 运维专用：更新特定租户下的某个组织
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<OrgUnitDto> UpdateOrgUnitInTenantAsync(int tenantId, OrgUnitDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -134,7 +157,12 @@ namespace CharonX.Organizations
                 return ObjectMapper.Map<OrgUnitDto>(orgUnit);
             }
         }
-
+        /// <summary>
+        /// 运维专用：删除特定租户下的某一组织
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task DeleteOrgUnitInTenantAsync(int tenantId, EntityDto<long> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -142,7 +170,12 @@ namespace CharonX.Organizations
                 await _orgUnitManager.DeleteAsync(input.Id);
             }
         }
-
+        /// <summary>
+        /// 运维专用：对特定租户下的指定组织添加一个角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task AddRoleToOrgUnitInTenantAsync(int tenantId, SetOrgUnitRoleDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -159,7 +192,12 @@ namespace CharonX.Organizations
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：对特定租户下的指定组织删除一个角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task RemoveRoleFromOrgUnitInTenantAsync(int tenantId, SetOrgUnitRoleDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -176,7 +214,13 @@ namespace CharonX.Organizations
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：获取特定租户下指定组织所包含的全部角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <param name="includeChildren"></param>
+        /// <returns></returns>
         public async Task<List<RoleDto>> GetRolesInOrgUnitInTenantAsync(int tenantId, EntityDto<long> input,
             bool includeChildren = false)
         {
@@ -202,7 +246,12 @@ namespace CharonX.Organizations
                 return roleDtos;
             }
         }
-
+        /// <summary>
+        /// 运维专用：对特定租户下指定组织添加一个用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task AddUserToOrgUnitInTenantAsync(int tenantId, SetOrgUnitUserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -225,7 +274,12 @@ namespace CharonX.Organizations
                 throw new UserFriendlyException(exception.Message);
             }
         }
-
+        /// <summary>
+        /// 运维专用：对特定租户下的指定组织删除某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task RemoveUserFromOrgUnitInTenantAsync(int tenantId, SetOrgUnitUserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -235,7 +289,13 @@ namespace CharonX.Organizations
                 await _userManager.RemoveFromOrganizationUnitAsync(input.UserId, input.OrgUnitId);
             }
         }
-
+        /// <summary>
+        /// 运维专用：获取特定租户下指定组织的全部用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <param name="includeChildren"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetUsersInOrgUnitInTenantAsync(int tenantId, EntityDto<long> input, bool includeChildren = false)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))

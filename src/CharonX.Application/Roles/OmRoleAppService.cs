@@ -36,7 +36,12 @@ namespace CharonX.Roles
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
-
+        /// <summary>
+        /// 运维专用：对指定租户添加一个角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<RoleDto> CreateRoleInTenantAsync(int tenantId, CreateRoleDto input)
         {
             var role = ObjectMapper.Map<Role>(input);
@@ -51,7 +56,12 @@ namespace CharonX.Roles
 
             return ObjectMapper.Map<RoleDto>(role);
         }
-
+        /// <summary>
+        /// 运维专用：获取指定租户下的全部角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<RoleDto> GetRoleInTenantAsync(int tenantId, EntityDto<int> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -72,7 +82,12 @@ namespace CharonX.Roles
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：获取指定租户下具有某一权限的所有角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<ListResultDto<RoleListDto>> GetRolesByPermissionInTenantAsync(int tenantId, GetRolesInput input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -88,7 +103,12 @@ namespace CharonX.Roles
                 return new ListResultDto<RoleListDto>(ObjectMapper.Map<List<RoleListDto>>(roles));
             }
         }
-
+        /// <summary>
+        /// 运维专用：获取指定租户的所有角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<PagedResultDto<RoleDto>> GetAllRolesInTenantAsync(int tenantId, PagedRoleResultRequestDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -106,7 +126,12 @@ namespace CharonX.Roles
                 );
             }
         }
-
+        /// <summary>
+        /// 运维专用：更新指定租户下的某一角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<RoleDto> UpdateRoleInTenantAsync(int tenantId, RoleDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -127,7 +152,12 @@ namespace CharonX.Roles
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：删除特定租户下的某一角色
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task DeleteRoleInTenantAsync(int tenantId, EntityDto<int> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -141,7 +171,12 @@ namespace CharonX.Roles
                 await _roleManager.DeleteRoleAndDetachUserAsync(role);
             }
         }
-
+        /// <summary>
+        /// 运维专用：对特定租户下的指定角色添加某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task AddUserToRoleInTenantAsync(int tenantId, SetRoleUserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -158,7 +193,12 @@ namespace CharonX.Roles
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：删除特定租户下指定角色中的某一用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task RemoveUserFromRoleInTenantAsync(int tenantId, SetRoleUserDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
@@ -175,7 +215,12 @@ namespace CharonX.Roles
                 }
             }
         }
-
+        /// <summary>
+        /// 运维专用：获取特定租户下指定角色的全部用户
+        /// </summary>
+        /// <param name="tenantId"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task<List<UserDto>> GetUsersInRoleInTenantAsync(int tenantId, EntityDto<int> input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
