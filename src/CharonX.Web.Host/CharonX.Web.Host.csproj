@@ -15,8 +15,8 @@
     <Company>Pensees</Company>
     <Product>CharonX</Product>
     <Authors>Overwind</Authors>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+    <Version>1.0.6</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;NOU_UNITTEST</DefineConstants>
