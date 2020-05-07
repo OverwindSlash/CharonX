@@ -1,10 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Abp.Zero.EntityFrameworkCore;
+﻿using Abp.Zero.EntityFrameworkCore;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
-using CharonX.MultiTenancy;
-using Abp.Authorization;
 using CharonX.Entities;
+using CharonX.MultiTenancy;
+using Microsoft.EntityFrameworkCore;
 
 namespace CharonX.EntityFrameworkCore
 {

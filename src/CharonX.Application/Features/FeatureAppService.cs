@@ -10,6 +10,7 @@ using Abp.Localization;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
+using CharonX.Entities;
 using CharonX.Features.Dto;
 using CharonX.MultiTenancy;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace CharonX.Features
         private readonly TenantManager _tenantManager;
         private readonly RoleManager _roleManager;
         private readonly IAuthorizationConfiguration _authorizationConfiguration;
-        private readonly IRepository<FeatureSetting, long> _featureRepository;
+        private readonly IRepository<CustomFeatureSetting> _customFeatureRepository;
 
         public FeatureAppService(
             IFeatureManager featureManager,
@@ -35,7 +36,7 @@ namespace CharonX.Features
             IIocManager iocManager,
             TenantManager tenantManager,
             RoleManager roleManager,
-            IRepository<FeatureSetting, long> featureRepository,
+            IRepository<CustomFeatureSetting> customFeatureRepository,
             IAuthorizationConfiguration authorizationConfiguration)
         {
             _featureManager = featureManager;
@@ -44,7 +45,7 @@ namespace CharonX.Features
             _tenantManager = tenantManager;
             _roleManager = roleManager;
             _authorizationConfiguration = authorizationConfiguration;
-            _featureRepository = featureRepository;
+            _customFeatureRepository = customFeatureRepository;
         }
 
         /// <summary>
@@ -54,13 +55,20 @@ namespace CharonX.Features
         public List<FeatureDto> ListAllFeatures()
         {
             var features = _featureManager.GetAll();
-
+            var customFeatures = _customFeatureRepository.GetAllList();
             List<FeatureDto> dtos = features.Select(
-                feature => new FeatureDto()
+                feature =>
                 {
-                    Name = feature.Name, 
-                    DisplayName = _localizationManager.GetString((LocalizableString) feature.DisplayName)
+                    var find = customFeatures.FirstOrDefault(p => p.Name == feature.Name);
+                    return new FeatureDto()
+                    {
+                        Name = feature.Name,
+                        DisplayName = find == null
+                         ? _localizationManager.GetString((LocalizableString)feature.DisplayName)
+                         : find.LocalizationZh
+                    };
                 }).ToList();
+            
 
             return dtos;
         }

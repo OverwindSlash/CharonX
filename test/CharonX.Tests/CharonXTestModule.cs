@@ -11,6 +11,10 @@ using Abp.Zero.Configuration;
 using Abp.Zero.EntityFrameworkCore;
 using CharonX.EntityFrameworkCore;
 using CharonX.Tests.DependencyInjection;
+using Abp.Domain.Repositories;
+using CharonX.Entities;
+using CharonX.EntityFrameworkCore.Repositories;
+using Abp.EntityFrameworkCore.Repositories;
 
 namespace CharonX.Tests
 {
@@ -43,6 +47,7 @@ namespace CharonX.Tests
             RegisterFakeService<AbpZeroDbMigrator<CharonXDbContext>>();
 
             Configuration.ReplaceService<IEmailSender, NullEmailSender>(DependencyLifeStyle.Transient);
+
         }
 
         public override void Initialize()

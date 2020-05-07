@@ -6,6 +6,7 @@ using Castle.Windsor.MsDependencyInjection;
 using Abp.Dependency;
 using CharonX.EntityFrameworkCore;
 using CharonX.Identity;
+using CharonX.Authorization;
 
 namespace CharonX.Tests.DependencyInjection
 {
@@ -30,6 +31,25 @@ namespace CharonX.Tests.DependencyInjection
                     .Instance(builder.Options)
                     .LifestyleSingleton()
             );
+            //IocManager.Instance.IocContainer.Register(
+            //    Component
+            //        .For<DbContextOptions<CharonXDbContext>>()
+            //        .Instance(builder.Options)
+            //        .LifestyleSingleton()
+            //);
+            //IocManager.Instance.RegisterIfNot<IUnitOfWorkDefaultOptions, UnitOfWorkDefaultOptions>(DependencyLifeStyle.Transient);
+            //IocManager.Instance.RegisterIfNot<ICurrentUnitOfWorkProvider, AsyncLocalCurrentUnitOfWorkProvider>(DependencyLifeStyle.Transient);
+            //IocManager.Instance.IocContainer.Register(
+            //    Component.For(typeof(IDbContextProvider<>))
+            //        .ImplementedBy(typeof(UnitOfWorkDbContextProvider<>))
+            //        .LifestyleTransient()
+            //    );
+            //IocManager.Instance.RegisterIfNot<IDbContextProvider<CharonXDbContext>, UnitOfWorkDbContextProvider<>>();
+            //Abp.Dependency.IocManager.Instance.IocContainer.Register(Component.For<IRepository<CustomPermissionSetting>>().ImplementedBy<EfCoreRepositoryBase<CharonXDbContext, CustomPermissionSetting>>().LifestyleTransient());
+
+            //IocManager.Instance.RegisterIfNot<IRepository<CustomPermissionSetting>, EfCoreRepositoryBase<CharonXDbContext, CustomPermissionSetting>>(DependencyLifeStyle.Transient);
+
+            IocManager.Instance.RegisterIfNot<IJustForUnitTest, JustForUnitTest>(DependencyLifeStyle.Transient);
         }
     }
 }

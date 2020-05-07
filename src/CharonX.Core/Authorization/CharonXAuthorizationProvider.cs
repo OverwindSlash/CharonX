@@ -1,4 +1,5 @@
-﻿using Abp.Application.Features;
+﻿//#define TEST_IGNORE
+using Abp.Application.Features;
 using Abp.Authorization;
 using Abp.Configuration;
 using Abp.Dependency;
@@ -11,19 +12,28 @@ using CharonX.Entities;
 using CharonX.Features;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+
 
 namespace CharonX.Authorization
 {
     public class CharonXAuthorizationProvider : AuthorizationProvider
     {
-        //private readonly IUnitOfWorkManager unitOfWorkManager;
         private readonly IRepository<CustomPermissionSetting> permissionRepository;
-        public CharonXAuthorizationProvider()
+        private readonly IIocResolver _iocResolver;
+        private bool testIgnore=false;
+        public CharonXAuthorizationProvider(IIocResolver iocResolver)
         {
-            //unitOfWorkManager = IocManager.Instance.Resolve<IUnitOfWorkManager>();
-            permissionRepository = IocManager.Instance.Resolve<IRepository<CustomPermissionSetting>>();
+            _iocResolver = iocResolver;
+            permissionRepository = _iocResolver.Resolve<IRepository<CustomPermissionSetting>>();
+            //customPermissionRepository = IocManager.Instance.Resolve<ICustomPermissionRepository>();
+
+            if (IocManager.Instance.IsRegistered<IJustForUnitTest>())
+            {
+                testIgnore = true;
+            }
         }
 
         public override void SetPermissions(IPermissionDefinitionContext context)
@@ -43,7 +53,7 @@ namespace CharonX.Authorization
                 L("SmartPass"),
                 featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
 
-            //read json file
+            //read from db
             var permissions = GetAllPermissionsFromDb();
             foreach (var permission in permissions)
             {
@@ -84,7 +94,6 @@ namespace CharonX.Authorization
             return permissions;
         }
 #endif
-
 
         private List<CustomPermissionSetting> GetAllPermissionsFromDb()
         {
