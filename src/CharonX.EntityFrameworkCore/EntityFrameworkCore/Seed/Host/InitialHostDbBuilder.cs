@@ -1,22 +1,18 @@
-﻿using Abp.Dependency;
-
-namespace CharonX.EntityFrameworkCore.Seed.Host
+﻿namespace CharonX.EntityFrameworkCore.Seed.Host
 {
     public class InitialHostDbBuilder
     {
         private readonly CharonXDbContext _context;
-        private readonly IIocResolver _iocResolver;
-        public InitialHostDbBuilder(CharonXDbContext context, IIocResolver iocResolver)
+        public InitialHostDbBuilder(CharonXDbContext context)
         {
             _context = context;
-            _iocResolver = iocResolver;
         }
 
         public void Create()
         {
             new DefaultEditionCreator(_context).Create();
             new DefaultLanguagesCreator(_context).Create();
-            new HostRoleAndUserCreator(_context,_iocResolver).Create();
+            new HostRoleAndUserCreator(_context).Create();
             new DefaultSettingsCreator(_context).Create();
 
             _context.SaveChanges();

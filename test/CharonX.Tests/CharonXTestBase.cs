@@ -1,6 +1,5 @@
 ﻿using Abp;
 using Abp.Authorization.Users;
-using Abp.Dependency;
 using Abp.Events.Bus;
 using Abp.Events.Bus.Entities;
 using Abp.MultiTenancy;
@@ -21,7 +20,6 @@ namespace CharonX.Tests
     public abstract class CharonXTestBase : AbpIntegratedTestBase<CharonXTestModule>
     {
         protected CharonXTestBase()
-            //: base(true, Abp.Dependency.IocManager.Instance)
         {
             void NormalizeDbContext(CharonXDbContext context)
             {
@@ -32,19 +30,19 @@ namespace CharonX.Tests
 
             // Seed initial data for host
             AbpSession.TenantId = null;
-            UsingDbContext((context, iocResolver) =>
+            UsingDbContext(context =>
             {
                 NormalizeDbContext(context);
-                new InitialHostDbBuilder(context,iocResolver).Create();
+                new InitialHostDbBuilder(context).Create();
                 new DefaultTenantBuilder(context).Create();
             });
 
             // Seed initial data for default tenant
             AbpSession.TenantId = 1;
-            UsingDbContext((context, iocResolver) =>
+            UsingDbContext(context =>
             {
                 NormalizeDbContext(context);
-                new TenantRoleAndUserBuilder(context, 1, iocResolver).Create();
+                new TenantRoleAndUserBuilder(context, 1).Create();
             });
 
             LoginAsDefaultTenantAdmin();
@@ -59,7 +57,7 @@ namespace CharonX.Tests
             return new DisposeAction(() => AbpSession.TenantId = previousTenantId);
         }
 
-        protected void UsingDbContext(Action<CharonXDbContext,IIocResolver> action)
+        protected void UsingDbContext(Action<CharonXDbContext> action)
         {
             UsingDbContext(AbpSession.TenantId, action);
         }
@@ -79,13 +77,13 @@ namespace CharonX.Tests
             return UsingDbContextAsync(AbpSession.TenantId, func);
         }
 
-        protected void UsingDbContext(int? tenantId, Action<CharonXDbContext, IIocResolver> action)
+        protected void UsingDbContext(int? tenantId, Action<CharonXDbContext> action)
         {
             using (UsingTenantId(tenantId))
             {
                 using (var context = LocalIocManager.Resolve<CharonXDbContext>())
                 {
-                    action(context,LocalIocManager);
+                    action(context);
                     context.SaveChanges();
                 }
             }

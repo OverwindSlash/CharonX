@@ -9,18 +9,15 @@ using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using Abp.Dependency;
 
 namespace CharonX.EntityFrameworkCore.Seed.Host
 {
     public class HostRoleAndUserCreator
     {
         private readonly CharonXDbContext _context;
-        private readonly IIocResolver _iocResolver;
-        public HostRoleAndUserCreator(CharonXDbContext context, IIocResolver iocResolver)
+        public HostRoleAndUserCreator(CharonXDbContext context)
         {
             _context = context;
-            _iocResolver = iocResolver;
         }
 
         public void Create()
@@ -48,7 +45,7 @@ namespace CharonX.EntityFrameworkCore.Seed.Host
                 .ToList();
 
             var permissions = PermissionFinder
-                .GetAllPermissions(new CharonXAuthorizationProvider(_iocResolver))
+                .GetAllPermissions(new CharonXAuthorizationProvider())
                 .Where(p => p.MultiTenancySides.HasFlag(MultiTenancySides.Host) &&
                             !grantedPermissions.Contains(p.Name))
                 .ToList();

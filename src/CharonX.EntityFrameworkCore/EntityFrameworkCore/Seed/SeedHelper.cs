@@ -12,10 +12,8 @@ namespace CharonX.EntityFrameworkCore.Seed
 {
     public static class SeedHelper
     {
-        private static IIocResolver _iocResolver;
         public static void SeedHostDb(IIocResolver iocResolver)
         {
-            _iocResolver = iocResolver;
             WithDbContext<CharonXDbContext>(iocResolver, SeedHostDb);
         }
 
@@ -24,11 +22,11 @@ namespace CharonX.EntityFrameworkCore.Seed
             context.SuppressAutoSetTenantId = true;
 
             // Host seed
-            new InitialHostDbBuilder(context,_iocResolver).Create();
+            new InitialHostDbBuilder(context).Create();
 
             // Default tenant seed (in host database).
             new DefaultTenantBuilder(context).Create();
-            new TenantRoleAndUserBuilder(context, 1,_iocResolver).Create();
+            new TenantRoleAndUserBuilder(context, 1).Create();
         }
 
         private static void WithDbContext<TDbContext>(IIocResolver iocResolver, Action<TDbContext> contextAction)

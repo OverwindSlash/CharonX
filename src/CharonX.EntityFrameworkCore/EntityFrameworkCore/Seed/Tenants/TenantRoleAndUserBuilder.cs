@@ -9,7 +9,6 @@ using Abp.MultiTenancy;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
-using Abp.Dependency;
 
 namespace CharonX.EntityFrameworkCore.Seed.Tenants
 {
@@ -17,12 +16,10 @@ namespace CharonX.EntityFrameworkCore.Seed.Tenants
     {
         private readonly CharonXDbContext _context;
         private readonly int _tenantId;
-        private readonly IIocResolver _iocResolver;
-        public TenantRoleAndUserBuilder(CharonXDbContext context, int tenantId, IIocResolver iocResolver)
+        public TenantRoleAndUserBuilder(CharonXDbContext context, int tenantId)
         {
             _context = context;
             _tenantId = tenantId;
-            _iocResolver = iocResolver;
         }
 
         public void Create()
@@ -50,7 +47,7 @@ namespace CharonX.EntityFrameworkCore.Seed.Tenants
                 .ToList();
 
             var permissions = PermissionFinder
-                .GetAllPermissions(new CharonXAuthorizationProvider(_iocResolver))
+                .GetAllPermissions(new CharonXAuthorizationProvider())
                 .Where(p => p.MultiTenancySides.HasFlag(MultiTenancySides.Tenant) &&
                             !grantedPermissions.Contains(p.Name))
                 .ToList();

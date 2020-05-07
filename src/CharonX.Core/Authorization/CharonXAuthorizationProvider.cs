@@ -1,20 +1,12 @@
-﻿//#define TEST_IGNORE
-using Abp.Application.Features;
+﻿using Abp.Application.Features;
 using Abp.Authorization;
-using Abp.Configuration;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
-using Abp.Domain.Uow;
 using Abp.Localization;
 using Abp.MultiTenancy;
-using CharonX.Authorization.Users;
 using CharonX.Entities;
 using CharonX.Features;
-using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 
 
 namespace CharonX.Authorization
@@ -22,18 +14,18 @@ namespace CharonX.Authorization
     public class CharonXAuthorizationProvider : AuthorizationProvider
     {
         private readonly IRepository<CustomPermissionSetting> permissionRepository;
-        private readonly IIocResolver _iocResolver;
         private bool testIgnore=false;
-        public CharonXAuthorizationProvider(IIocResolver iocResolver)
+        public CharonXAuthorizationProvider()
         {
-            _iocResolver = iocResolver;
-            permissionRepository = _iocResolver.Resolve<IRepository<CustomPermissionSetting>>();
-            //customPermissionRepository = IocManager.Instance.Resolve<ICustomPermissionRepository>();
-
             if (IocManager.Instance.IsRegistered<IJustForUnitTest>())
             {
                 testIgnore = true;
             }
+            if (!testIgnore)
+            {
+                permissionRepository = IocManager.Instance.Resolve<IRepository<CustomPermissionSetting>>();
+            }
+
         }
 
         public override void SetPermissions(IPermissionDefinitionContext context)
@@ -53,22 +45,26 @@ namespace CharonX.Authorization
                 L("SmartPass"),
                 featureDependency: new SimpleFeatureDependency(PesCloudFeatureProvider.SmartPassFeature));
 
-            //read from db
-            var permissions = GetAllPermissionsFromDb();
-            foreach (var permission in permissions)
+            if (!testIgnore)
             {
-                if (!string.IsNullOrEmpty(permission.FeatureDependency))
+                //read from db
+                var permissions = GetAllPermissionsFromDb();
+                foreach (var permission in permissions)
                 {
-                    context.CreatePermission(permission.Name,
-                        L(permission.Name),
-                        featureDependency: new SimpleFeatureDependency(permission.FeatureDependency));
-                }
-                else
-                {
-                    context.CreatePermission(permission.Name,
-                        L(permission.Name));
+                    if (!string.IsNullOrEmpty(permission.FeatureDependency))
+                    {
+                        context.CreatePermission(permission.Name,
+                            L(permission.Name),
+                            featureDependency: new SimpleFeatureDependency(permission.FeatureDependency));
+                    }
+                    else
+                    {
+                        context.CreatePermission(permission.Name,
+                            L(permission.Name));
+                    }
                 }
             }
+            
 #if false
             
 
