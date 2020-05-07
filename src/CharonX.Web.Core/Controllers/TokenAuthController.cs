@@ -137,44 +137,44 @@ namespace CharonX.Controllers
             };
         }
 
-        //[HttpPost]
-        //public async Task<AuthenticateResultModel> AuthenticateForApp([FromBody] PhoneAuthenticateModel model)
-        //{
-        //    string username = string.Empty;
-        //    string tenantName = string.Empty;
-        //    using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
-        //    {
-        //        var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
-        //        if (user == null)
-        //        {
-        //            throw new UserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
-        //        }
-        //        username = user.UserName;
+        [HttpPost]
+        public async Task<AuthenticateResultModel> AuthenticateForApp([FromBody] PhoneAuthenticateModel model)
+        {
+            string username = string.Empty;
+            string tenantName = string.Empty;
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+                if (user == null)
+                {
+                    throw new UserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
+                }
+                username = user.UserName;
 
-        //        if (user.TenantId.HasValue)
-        //        {
-        //            tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
-        //        }
-        //    }
+                if (user.TenantId.HasValue)
+                {
+                    tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
+                }
+            }
 
-        //    var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
-            
-        //    int? tenantId = null;
-        //    if (loginResult.Tenant != null)
-        //    {
-        //        tenantId = loginResult.Tenant.Id;
-        //    }
+            var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
 
-        //    var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+            int? tenantId = null;
+            if (loginResult.Tenant != null)
+            {
+                tenantId = loginResult.Tenant.Id;
+            }
 
-        //    return new AuthenticateResultModel
-        //    {
-        //        AccessToken = accessToken,
-        //        EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-        //        ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
-        //        UserId = loginResult.User.Id
-        //    };
-        //}
+            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+            return new AuthenticateResultModel
+            {
+                AccessToken = accessToken,
+                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+                UserId = loginResult.User.Id
+            };
+        }
 
         [HttpGet]
         public async Task GetSmsAuthenticationCode(string phoneNumber)
