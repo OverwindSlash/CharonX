@@ -14,7 +14,7 @@ namespace CharonX
 
         static CharonXConsts()
         {
-            string path = @"Avatar\user.png";
+            string path = @"Avatar/user.png";
             byte[] b = System.IO.File.ReadAllBytes(path);
             DefaultAvatarBase64 = "data:image/png;base64," + Convert.ToBase64String(b);
         }

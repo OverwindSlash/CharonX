@@ -84,7 +84,7 @@ namespace CharonX.Sessions
             if (AbpSession.TenantId.HasValue)
             {
                 Tenant tenant = await GetCurrentTenantAsync();
-                output.TenantName = tenant.TenancyName;
+                output.TenantName = tenant.Name;
             }
 
             return output;

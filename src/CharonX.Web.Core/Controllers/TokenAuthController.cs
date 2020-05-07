@@ -101,7 +101,7 @@ namespace CharonX.Controllers
             string tenantName = string.Empty;
             using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
             {
-                var user = await _repository.GetAll().SingleOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+                var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
                 if (user == null)
                 {
                     throw new UserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));

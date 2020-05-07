@@ -131,6 +131,16 @@ namespace CharonX.Authorization.Users
             return await _store.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
         }
 
+        //public async Task<bool> CheckDuplicateUsernameAsync(string usernanme)
+        //{
+        //    return await _store.Users.AnyAsync(u => u.UserName == usernanme);
+        //}
+
+        public async Task<bool> CheckDuplicateEmailAsync(string email)
+        {
+            return await _store.Users.AnyAsync(u => u.EmailAddress == email);
+        }
+
         public override async Task<IList<User>> GetUsersInRoleAsync(string roleName)
         {
             var role = await _roleManager.GetRoleByNameAsync(roleName);
