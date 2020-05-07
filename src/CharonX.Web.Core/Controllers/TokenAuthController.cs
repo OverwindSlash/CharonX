@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Abp.Authorization;
+﻿using Abp.Authorization;
 using Abp.Authorization.Users;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
@@ -22,7 +14,15 @@ using CharonX.Models;
 using CharonX.Models.TokenAuth;
 using CharonX.MultiTenancy;
 using CharonX.Validation;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CharonX.Controllers
 {
@@ -136,6 +136,45 @@ namespace CharonX.Controllers
                 UserId = loginResult.User.Id
             };
         }
+
+        //[HttpPost]
+        //public async Task<AuthenticateResultModel> AuthenticateForApp([FromBody] PhoneAuthenticateModel model)
+        //{
+        //    string username = string.Empty;
+        //    string tenantName = string.Empty;
+        //    using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+        //    {
+        //        var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+        //        if (user == null)
+        //        {
+        //            throw new UserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
+        //        }
+        //        username = user.UserName;
+
+        //        if (user.TenantId.HasValue)
+        //        {
+        //            tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
+        //        }
+        //    }
+
+        //    var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
+            
+        //    int? tenantId = null;
+        //    if (loginResult.Tenant != null)
+        //    {
+        //        tenantId = loginResult.Tenant.Id;
+        //    }
+
+        //    var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+        //    return new AuthenticateResultModel
+        //    {
+        //        AccessToken = accessToken,
+        //        EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+        //        ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+        //        UserId = loginResult.User.Id
+        //    };
+        //}
 
         [HttpGet]
         public async Task GetSmsAuthenticationCode(string phoneNumber)

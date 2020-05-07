@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Dependency;
+using CharonX.Tests.DependencyInjection;
 
 namespace CharonX.Tests
 {
