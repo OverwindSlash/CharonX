@@ -14,6 +14,8 @@ namespace CharonX.Features
 
         public Task<List<FeatureDto>> ListAllFeaturesInTenantAsync(int tenantId);
 
+        public Task<List<FeatureDto>> ListAllFeaturesInCurrentTenantAsync();
+
         public ListResultDto<PermissionDto> GetAllPermissionsInSystem();
 
         public Task<ListResultDto<PermissionDto>> GetTenantPermissionsAsync(int tenantId);

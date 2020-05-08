@@ -2,11 +2,13 @@
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Domain.Uow;
 using Abp.Extensions;
 using Abp.IdentityFramework;
 using Abp.Linq.Extensions;
 using Abp.MultiTenancy;
 using Abp.Organizations;
+using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
@@ -16,8 +18,6 @@ using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
-using Abp.Domain.Uow;
-using Abp.UI;
 
 namespace CharonX.MultiTenancy
 {
