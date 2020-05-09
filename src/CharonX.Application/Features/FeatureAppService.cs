@@ -12,10 +12,11 @@ using CharonX.Authorization;
 using CharonX.Authorization.Roles;
 using CharonX.Features.Dto;
 using CharonX.MultiTenancy;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using CharonX.Authorization.Users;
 
 namespace CharonX.Features
 {
@@ -28,6 +29,7 @@ namespace CharonX.Features
         private readonly TenantManager _tenantManager;
         private readonly RoleManager _roleManager;
         private readonly IAuthorizationConfiguration _authorizationConfiguration;
+        private readonly UserManager _userManager;
         private readonly IRepository<FeatureSetting, long> _featureRepository;
 
         public FeatureAppService(
@@ -37,7 +39,8 @@ namespace CharonX.Features
             TenantManager tenantManager,
             RoleManager roleManager,
             IRepository<FeatureSetting, long> featureRepository,
-            IAuthorizationConfiguration authorizationConfiguration)
+            IAuthorizationConfiguration authorizationConfiguration,
+            UserManager userManager)
         {
             _featureManager = featureManager;
             _localizationManager = localizationManager;
@@ -45,6 +48,7 @@ namespace CharonX.Features
             _tenantManager = tenantManager;
             _roleManager = roleManager;
             _authorizationConfiguration = authorizationConfiguration;
+            _userManager = userManager;
             _featureRepository = featureRepository;
         }
 
@@ -130,9 +134,18 @@ namespace CharonX.Features
         [AbpAllowAnonymous]
         public async Task<List<FeatureDto>> ListAllFeaturesInCurrentTenantAsync()
         {
-            if (!AbpSession.TenantId.HasValue)
+            if (AbpSession.UserId == null)
             {
-                return new List<FeatureDto>();
+                throw new UserFriendlyException(L("NeedLoginAsTenantAdmin"));
+            }
+
+            long currentUserId = AbpSession.UserId.Value;
+            var currentUser = await _userManager.GetUserByIdAsync(currentUserId);
+
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (!roles.Contains(StaticRoleNames.Tenants.Admin))
+            {
+                throw new UserFriendlyException(L("NeedLoginAsTenantAdmin"));
             }
 
             var features = await _tenantManager.GetFeatureValuesAsync(AbpSession.TenantId.Value);
