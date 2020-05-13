@@ -6,7 +6,7 @@ namespace CharonX.Validation
     public static class ValidationHelper
     {
         public const string EmailRegex = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
-        public const string MobileRegex = @"^1[3456789]\d{9}$";
+        public const string MobileRegex = @"^[0-9-]{4,50}$";
 
         public static bool IsEmail(string value)
         {
