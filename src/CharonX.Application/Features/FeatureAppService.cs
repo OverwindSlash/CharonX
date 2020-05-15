@@ -12,9 +12,11 @@ using CharonX.Authorization;
 using CharonX.Authorization.Roles;
 using CharonX.Features.Dto;
 using CharonX.MultiTenancy;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CharonX.Authorization.Users;
 
 namespace CharonX.Features
 {
@@ -27,6 +29,7 @@ namespace CharonX.Features
         private readonly TenantManager _tenantManager;
         private readonly RoleManager _roleManager;
         private readonly IAuthorizationConfiguration _authorizationConfiguration;
+        private readonly UserManager _userManager;
         private readonly IRepository<FeatureSetting, long> _featureRepository;
 
         public FeatureAppService(
@@ -36,7 +39,8 @@ namespace CharonX.Features
             TenantManager tenantManager,
             RoleManager roleManager,
             IRepository<FeatureSetting, long> featureRepository,
-            IAuthorizationConfiguration authorizationConfiguration)
+            IAuthorizationConfiguration authorizationConfiguration,
+            UserManager userManager)
         {
             _featureManager = featureManager;
             _localizationManager = localizationManager;
@@ -44,6 +48,7 @@ namespace CharonX.Features
             _tenantManager = tenantManager;
             _roleManager = roleManager;
             _authorizationConfiguration = authorizationConfiguration;
+            _userManager = userManager;
             _featureRepository = featureRepository;
         }
 
@@ -51,6 +56,7 @@ namespace CharonX.Features
         /// 获取全部功能包
         /// </summary>
         /// <returns></returns>
+        [HttpGet]
         public List<FeatureDto> ListAllFeatures()
         {
             var features = _featureManager.GetAll();
@@ -99,6 +105,7 @@ namespace CharonX.Features
         /// </summary>
         /// <param name="tenantId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<List<FeatureDto>> ListAllFeaturesInTenantAsync(int tenantId)
         {
             var features = await _tenantManager.GetFeatureValuesAsync(tenantId);
@@ -118,10 +125,52 @@ namespace CharonX.Features
 
             return featureDtos;
         }
+
+        /// <summary>
+        /// 获取当前租户的全部功能包
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [AbpAllowAnonymous]
+        public async Task<List<FeatureDto>> ListAllFeaturesInCurrentTenantAsync()
+        {
+            if (AbpSession.UserId == null)
+            {
+                throw new UserFriendlyException(L("NeedLoginAsTenantAdmin"));
+            }
+
+            long currentUserId = AbpSession.UserId.Value;
+            var currentUser = await _userManager.GetUserByIdAsync(currentUserId);
+
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (!roles.Contains(StaticRoleNames.Tenants.Admin))
+            {
+                throw new UserFriendlyException(L("NeedLoginAsTenantAdmin"));
+            }
+
+            var features = await _tenantManager.GetFeatureValuesAsync(AbpSession.TenantId.Value);
+
+            var featureDtos = new List<FeatureDto>();
+            foreach (var feature in features)
+            {
+                if (feature.Value != "true") continue;
+
+                Feature entity = _featureManager.Get(feature.Name);
+                featureDtos.Add(new FeatureDto()
+                {
+                    Name = entity.Name,
+                    DisplayName = _localizationManager.GetString((LocalizableString)entity.DisplayName)
+                });
+            }
+
+            return featureDtos;
+        }
+
         /// <summary>
         /// 获取系统管理员的所有权限
         /// </summary>
         /// <returns></returns>
+        [HttpGet]
         public ListResultDto<PermissionDto> GetAllPermissionsInSystem()
         {
             var permissions = PermissionManager.GetAllPermissions();
@@ -135,6 +184,7 @@ namespace CharonX.Features
         /// </summary>
         /// <param name="tenantId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<ListResultDto<PermissionDto>> GetTenantPermissionsAsync(int tenantId)
         {
             Tenant tenant = await _tenantManager.GetAvailableTenantById(tenantId);

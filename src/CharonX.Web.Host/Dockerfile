@@ -19,6 +19,13 @@ RUN dotnet build "CharonX.Web.Host.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "CharonX.Web.Host.csproj" -c Release -o /app/publish
 
+WORKDIR /test
+COPY ["test/CharonX.Tests/CharonX.Tests.csproj", "test/CharonX.Tests/"]
+RUN dotnet restore "test/CharonX.Tests/CharonX.Tests.csproj"
+COPY . .
+WORKDIR "/test/test/CharonX.Tests"
+RUN dotnet test "CharonX.Tests.csproj"
+
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .

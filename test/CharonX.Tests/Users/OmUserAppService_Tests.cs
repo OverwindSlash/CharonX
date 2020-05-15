@@ -184,7 +184,13 @@ namespace CharonX.Tests.Users
 
             var userDto = await _omUserAppService.CreateAdminUserInTenantAsync(tenantDto.Id, createUserDto);
 
-            var allAdmins = await _omUserAppService.GetAllAdminUserInTenantAsync(tenantDto.Id);
+            PagedAdminUserResultRequestDto pagedDto = new PagedAdminUserResultRequestDto()
+            {
+                Keyword = string.Empty,
+                IsActive = true
+            };
+
+            var allAdmins = await _omUserAppService.GetAllAdminUserInTenantAsync(tenantDto.Id, pagedDto);
             allAdmins.Count.ShouldBe(2);
             allAdmins[0].UserName.ShouldBe("admin");
             allAdmins[1].UserName.ShouldBe("TestUser");

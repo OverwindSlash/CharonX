@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Abp.Authorization.Users;
 using Abp.Domain.Uow;
+using CharonX.MultiTenancy;
 
 namespace CharonX.Users
 {
@@ -33,6 +34,7 @@ namespace CharonX.Users
     public class UserAppService : AsyncCrudAppService<User, UserDto, long, PagedUserResultRequestDto, CreateUserDto, UserDto>, IUserAppService
     {
         private readonly IRepository<User, long> _repository;
+        private readonly TenantManager _tenantManager;
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
         private readonly IRepository<Role> _roleRepository;
@@ -44,6 +46,7 @@ namespace CharonX.Users
 
         public UserAppService(
             IRepository<User, long> repository,
+            TenantManager tenantManager,
             UserManager userManager,
             RoleManager roleManager,
             IRepository<Role> roleRepository,
@@ -55,6 +58,7 @@ namespace CharonX.Users
             : base(repository)
         {
             _repository = repository;
+            _tenantManager = tenantManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _roleRepository = roleRepository;
@@ -353,32 +357,49 @@ namespace CharonX.Users
         {
             identityResult.CheckErrors(LocalizationManager);
         }
+
         /// <summary>
         /// 修改当前登录用户的密码
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
+        [HttpPost]
+        [AbpAllowAnonymous]
         public async Task<bool> ChangePassword(ChangePasswordDto input)
         {
             if (_abpSession.UserId == null)
             {
                 throw new UserFriendlyException("Please log in before attemping to change password.");
             }
+
             long userId = _abpSession.UserId.Value;
             var user = await _userManager.GetUserByIdAsync(userId);
-            var loginAsync = await _logInManager.LoginAsync(user.UserName, input.CurrentPassword, shouldLockout: false);
+
+            string tenantName = null;
+            int? tenantId = AbpSession.TenantId;
+            if (tenantId.HasValue)
+            {
+                Tenant tenant = await _tenantManager.GetByIdAsync(tenantId.Value);
+                tenantName = tenant.Name;
+            }
+
+            var loginAsync = await _logInManager.LoginAsync(user.UserName, input.CurrentPassword, tenancyName: tenantName, shouldLockout: false);
+
             if (loginAsync.Result != AbpLoginResultType.Success)
             {
-                throw new UserFriendlyException("Your 'Existing Password' did not match the one on record.  Please try again or contact an administrator for assistance in resetting your password.");
+                throw new UserFriendlyException(L("ExistingPasswordWrong"));
             }
-            if (!new Regex(AccountAppService.PasswordRegex).IsMatch(input.NewPassword))
-            {
-                throw new UserFriendlyException("Passwords must be at least 8 characters, contain a lowercase, uppercase, and number.");
-            }
+
+            //if (!new Regex(AccountAppService.PasswordRegex).IsMatch(input.NewPassword))
+            //{
+            //    throw new UserFriendlyException("Passwords must be at least 8 characters, contain a lowercase, uppercase, and number.");
+            //}
+
             user.Password = _passwordHasher.HashPassword(user, input.NewPassword);
             CurrentUnitOfWork.SaveChanges();
             return true;
         }
+
         /// <summary>
         /// 激活指定用户
         /// </summary>

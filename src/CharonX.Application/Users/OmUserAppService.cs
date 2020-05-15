@@ -102,13 +102,29 @@ namespace CharonX.Users
         /// </summary>
         /// <param name="tenantId"></param>
         /// <returns></returns>
-        public async Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId)
+        public async Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId, PagedAdminUserResultRequestDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
             {
                 var adminRole = await _roleManager.GetRoleByNameAsync(StaticRoleNames.Tenants.Admin);
 
                 IList<User> adminUsers = await _userManager.GetUsersInRoleAsync(adminRole.Name);
+
+                if (!string.IsNullOrEmpty(input.Keyword))
+                {
+                    adminUsers = adminUsers.Where(
+                        u => u.UserName.Contains(input.Keyword) || u.Name.Contains(input.Keyword) || u.EmailAddress.Contains(input.Keyword)).ToList();
+                }
+
+                if (input.IsActive.HasValue)
+                {
+                    adminUsers = adminUsers.Where(u => u.IsActive == input.IsActive.Value).ToList();
+                }
+
+                var query = adminUsers.AsQueryable();
+                query = PagingHelper.ApplySorting<User, long>(query, input);
+                query = PagingHelper.ApplyPaging<User, long>(query, input);
+                adminUsers = query.ToList();
 
                 List<UserDto> userDtos = new List<UserDto>();
                 foreach (User adminUser in adminUsers)

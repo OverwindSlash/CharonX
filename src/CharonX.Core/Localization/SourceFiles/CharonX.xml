@@ -114,6 +114,7 @@
     <text name="EmailAddressDuplicated">Email address {0} duplicated.</text>
     <text name="InvalidEmailAddress">Invalid email address: {0}.</text>
     <text name="NeedLoginAsTenantAdmin">Please log in as tenant administrator before attempting to reset password.</text>
+    <text name="ExistingPasswordWrong">Your 'Existing Password' did not match the one on record.  Please try again or contact an administrator for assistance in resetting your password.</text>
     <text name="SearchWithThreeDot">Search...</text>
     <text name="SmartSecurityFeature">Smart security feature</text>
     <text name="SmartPassFeature">Smart pass feature</text>
