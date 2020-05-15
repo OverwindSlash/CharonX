@@ -121,6 +121,11 @@ namespace CharonX.Users
                     adminUsers = adminUsers.Where(u => u.IsActive == input.IsActive.Value).ToList();
                 }
 
+                var query = adminUsers.AsQueryable();
+                query = PagingHelper.ApplySorting<User, long>(query, input);
+                query = PagingHelper.ApplyPaging<User, long>(query, input);
+                adminUsers = query.ToList();
+
                 List<UserDto> userDtos = new List<UserDto>();
                 foreach (User adminUser in adminUsers)
                 {
