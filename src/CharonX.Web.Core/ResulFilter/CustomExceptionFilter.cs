@@ -39,7 +39,7 @@ namespace CharonX.ResulFilter
 
             if (wrapOnError)
             {
-                if (context.Exception is CustomUserFriendlyException)
+                if (context.Exception is AppUserFriendlyException)
                 {
                     return (int)HttpStatusCode.OK;
                 }
