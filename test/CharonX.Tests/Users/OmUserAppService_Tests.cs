@@ -191,9 +191,9 @@ namespace CharonX.Tests.Users
             };
 
             var allAdmins = await _omUserAppService.GetAllAdminUserInTenantAsync(tenantDto.Id, pagedDto);
-            allAdmins.Count.ShouldBe(2);
-            allAdmins[0].UserName.ShouldBe("admin");
-            allAdmins[1].UserName.ShouldBe("TestUser");
+            allAdmins.TotalCount.ShouldBe(2);
+            allAdmins.Items[0].UserName.ShouldBe("admin");
+            allAdmins.Items[1].UserName.ShouldBe("TestUser");
         }
 
         [Fact]

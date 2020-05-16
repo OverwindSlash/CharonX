@@ -12,7 +12,7 @@ namespace CharonX.Users
 
         public Task<UserDto> CreateAdminUserInTenantAsync(int tenantId, CreateUserDto input);
 
-        public Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId, PagedAdminUserResultRequestDto input);
+        public Task<PagedResultDto<UserDto>> GetAllAdminUserInTenantAsync(int tenantId, PagedAdminUserResultRequestDto input);
 
         public Task<UserDto> GetUserInTenantAsync(int tenantId, EntityDto<long> input);
 

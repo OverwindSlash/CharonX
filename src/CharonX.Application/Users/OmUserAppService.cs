@@ -102,7 +102,8 @@ namespace CharonX.Users
         /// </summary>
         /// <param name="tenantId"></param>
         /// <returns></returns>
-        public async Task<List<UserDto>> GetAllAdminUserInTenantAsync(int tenantId, PagedAdminUserResultRequestDto input)
+        
+        public async Task<PagedResultDto<UserDto>> GetAllAdminUserInTenantAsync(int tenantId, PagedAdminUserResultRequestDto input)
         {
             using (CurrentUnitOfWork.SetTenantId(tenantId))
             {
@@ -139,7 +140,7 @@ namespace CharonX.Users
                     userDtos.Add(userDto);
                 }
 
-                return userDtos;
+                return new PagedResultDto<UserDto>(userDtos.Count, userDtos);
             }
         }
         /// <summary>
