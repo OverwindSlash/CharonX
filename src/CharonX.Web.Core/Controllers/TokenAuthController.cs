@@ -13,6 +13,7 @@ using CharonX.Authorization.Users;
 using CharonX.Models;
 using CharonX.Models.TokenAuth;
 using CharonX.MultiTenancy;
+using CharonX.ResulFilter;
 using CharonX.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -147,7 +148,7 @@ namespace CharonX.Controllers
                 var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
                 if (user == null)
                 {
-                    throw new UserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
+                    throw new AppUserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
                 }
                 username = user.UserName;
 

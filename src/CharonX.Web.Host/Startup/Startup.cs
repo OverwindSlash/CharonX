@@ -21,6 +21,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
 using System.IO;
 using CharonX.Features;
+using CharonX.ResulFilter;
 
 namespace CharonX.Web.Host.Startup
 {
@@ -42,6 +43,7 @@ namespace CharonX.Web.Host.Startup
                 options =>
                 {
                     options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute());
+                    options.Filters.AddService(typeof(CustomExceptionFilter),order:1);
                 }
             ).AddNewtonsoftJson(options =>
             {
