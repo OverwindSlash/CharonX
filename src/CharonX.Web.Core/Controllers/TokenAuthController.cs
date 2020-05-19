@@ -158,23 +158,30 @@ namespace CharonX.Controllers
                 }
             }
 
-            var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
-
-            int? tenantId = null;
-            if (loginResult.Tenant != null)
+            try
             {
-                tenantId = loginResult.Tenant.Id;
+                var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
+
+                int? tenantId = null;
+                if (loginResult.Tenant != null)
+                {
+                    tenantId = loginResult.Tenant.Id;
+                }
+
+                var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+                return new AuthenticateResultModel
+                {
+                    AccessToken = accessToken,
+                    EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                    ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+                    UserId = loginResult.User.Id
+                };
             }
-
-            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
-
-            return new AuthenticateResultModel
+            catch (UserFriendlyException e)
             {
-                AccessToken = accessToken,
-                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
-                UserId = loginResult.User.Id
-            };
+                throw new AppUserFriendlyException(message:e.Message, details:e.Details);
+            }
         }
 
         [HttpGet]
