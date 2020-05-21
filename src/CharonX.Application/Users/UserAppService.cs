@@ -375,15 +375,15 @@ namespace CharonX.Users
             long userId = _abpSession.UserId.Value;
             var user = await _userManager.GetUserByIdAsync(userId);
 
-            string tenantName = null;
+            string tenancyName = null;
             int? tenantId = AbpSession.TenantId;
             if (tenantId.HasValue)
             {
                 Tenant tenant = await _tenantManager.GetByIdAsync(tenantId.Value);
-                tenantName = tenant.Name;
+                tenancyName = tenant.TenancyName;
             }
 
-            var loginAsync = await _logInManager.LoginAsync(user.UserName, input.CurrentPassword, tenancyName: tenantName, shouldLockout: false);
+            var loginAsync = await _logInManager.LoginAsync(user.UserName, input.CurrentPassword, tenancyName: tenancyName, shouldLockout: false);
 
             if (loginAsync.Result != AbpLoginResultType.Success)
             {
