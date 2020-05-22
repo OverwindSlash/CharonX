@@ -185,7 +185,7 @@ namespace CharonX.Roles
                 {
                     var user = await _userManager.GetUserByIdAsync(input.UserId);
                     var role = await _roleManager.GetRoleByIdAsync(input.RoleId);
-                    await _userManager.AddToRoleAsync(user, role.Name);
+                    await _userManager.AddToRolesAsync(user, new string[] { role.Name });
                 }
                 catch (Exception exception)
                 {
