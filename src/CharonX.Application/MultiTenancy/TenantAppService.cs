@@ -133,6 +133,30 @@ namespace CharonX.MultiTenancy
             }
         }
 
+        public override async Task<PagedResultDto<TenantDto>> GetAllAsync(PagedTenantResultRequestDto input)
+        {
+            var tenants= await base.GetAllAsync(input);
+
+            foreach (var tenant in tenants.Items)
+            {
+                using (CurrentUnitOfWork.SetTenantId(tenant.Id))
+                {
+                    try
+                    {
+                        var adminUser = await _userManager.FindByNameAsync("admin");
+                        tenant.AdminPhoneNumber = adminUser.PhoneNumber;
+                    }
+                    catch (System.Exception)
+                    {
+                        throw new UserFriendlyException("Can not find the admin user of tenant " + tenant.Name);
+                    }
+                    
+                }
+            }
+
+            return tenants;
+        }
+
         protected override IQueryable<Tenant> CreateFilteredQuery(PagedTenantResultRequestDto input)
         {
             return Repository.GetAll()
