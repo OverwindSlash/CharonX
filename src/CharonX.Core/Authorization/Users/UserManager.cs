@@ -74,8 +74,20 @@ namespace CharonX.Authorization.Users
         public async Task<IdentityResult> SetOrgUnitsAndRoles(User user, string[] orgUnitNames, string[] roleNames)
         {
             List<Role> rolesToBeGrant = new List<Role>();
+            var currentRoles = await GetRolesAsync(user);
 
             // Set organization units and get roles belongs to them.
+            var currentOrgs = await GetOrganizationUnitsAsync(user);
+            orgUnitNames = orgUnitNames == null ? new string[0] : orgUnitNames;
+            //remove orgs
+            if (orgUnitNames.Intersect(currentOrgs.Select(p=>p.DisplayName)).ToArray().Length<currentOrgs.Count)
+            {
+                foreach (var org in currentOrgs)
+                {
+                    RemoveFromOrganizationUnit(user, org);
+                }
+            }
+
             if ((orgUnitNames != null) && (orgUnitNames.Length != 0))
             {
                 var organizationUnits = _orgUnitRepository.GetAll()
@@ -89,6 +101,7 @@ namespace CharonX.Authorization.Users
                 }
             }
 
+
             // Add additional roles not included in organization units
             if ((roleNames != null) && (roleNames.Length != 0))
             {
@@ -100,12 +113,16 @@ namespace CharonX.Authorization.Users
             }
 
             // Remove all exist roles
-            var grantedRoles = await GetRolesAsync(user);
-            foreach (string grantedRole in grantedRoles)
+
+            //var grantedRoles = await GetRolesAsync(user);
+            if (rolesToBeGrant.Select(p=>p.DisplayName).Intersect(currentRoles).ToArray().Length<currentRoles.Count)
             {
-                if (await RemoveFromRoleAsync(user, grantedRole) != IdentityResult.Success)
+                foreach (string grantedRole in currentRoles.Except(rolesToBeGrant.Select(p => p.DisplayName)))
                 {
-                    return IdentityResult.Failed();
+                    if (await RemoveFromRoleAsync(user, grantedRole) != IdentityResult.Success)
+                    {
+                        return IdentityResult.Failed();
+                    }
                 }
             }
             

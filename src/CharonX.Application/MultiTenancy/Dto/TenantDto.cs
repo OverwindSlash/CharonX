@@ -19,6 +19,8 @@ namespace CharonX.MultiTenancy.Dto
 
         [StringLength(Tenant.MaxContactLength)]
         public string Contact { get; set; }
+        [StringLength(Tenant.MaxPhoneNumberLength)]
+        public string AdminPhoneNumber { get; set; }
 
         [StringLength(Tenant.MaxAddressLength)]
         public string Address { get; set; }
