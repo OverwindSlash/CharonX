@@ -143,7 +143,7 @@ namespace CharonX.MultiTenancy
                 {
                     try
                     {
-                        var adminUser = await _userManager.FindByNameAsync("admin");
+                        var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
                         tenant.AdminPhoneNumber = adminUser.PhoneNumber;
                     }
                     catch (System.Exception)
