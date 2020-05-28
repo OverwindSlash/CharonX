@@ -194,7 +194,7 @@ namespace CharonX.Users
 
                 if (input.PhoneNumber != user.PhoneNumber)
                 {
-                    await CheckDuplicatedPhoneNumber(user.PhoneNumber);
+                    await CheckDuplicatedPhoneNumber(input.PhoneNumber);
                 }
 
                 if (input.EmailAddress != user.EmailAddress)
