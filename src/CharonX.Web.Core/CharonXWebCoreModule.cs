@@ -13,6 +13,7 @@ using CharonX.Authentication.JwtBearer;
 using CharonX.Configuration;
 using CharonX.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using CharonX.Authorization.AuthCode;
 
 namespace CharonX
 {
@@ -48,6 +49,16 @@ namespace CharonX
                  );
 
             ConfigureTokenAuth();
+            Configuration.Caching.Configure(SmsAuthManager.SmsAuthCodeCacheName, cache =>
+            {
+                var expireMinutes = _appConfiguration.GetSection(SmsAuthManager.SmsAuthCodeCacheName)["ExpireMinutes"];
+                int _maxRetryTimes = 3;
+                if (Int32.TryParse(expireMinutes, out var result))
+                {
+                    _maxRetryTimes = result;
+                }
+                cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(_maxRetryTimes);
+            });
         }
 
         private void ConfigureTokenAuth()

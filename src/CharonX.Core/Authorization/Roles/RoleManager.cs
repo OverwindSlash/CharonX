@@ -48,20 +48,22 @@ namespace CharonX.Authorization.Roles
         public async Task GrantAllPermissionToAdminRoleInTenant(Tenant tenant)
         {
             var adminRole = Roles.Single(r => r.Name == StaticRoleNames.Tenants.Admin);
+            await GrantAllPermissionsAsync(adminRole);
 
-            using (var featureDependencyContext = _iocManager.ResolveAsDisposable<FeatureDependencyContext>())
-            {
-                var featureDependencyContextObject = featureDependencyContext.Object;
-                featureDependencyContextObject.TenantId = tenant.Id;
+            //using (var featureDependencyContext = _iocManager.ResolveAsDisposable<FeatureDependencyContext>())
+            //{
+            //    var featureDependencyContextObject = featureDependencyContext.Object;
+            //    featureDependencyContextObject.TenantId = tenant.Id;
 
-                var permissions = _permissionManager.GetAllPermissions(adminRole.GetMultiTenancySide())
-                    .Where(permission =>
-                        permission.FeatureDependency == null ||
-                        permission.FeatureDependency.IsSatisfied(featureDependencyContextObject)
-                    ).ToList();
+            //    var permissions = _permissionManager.GetAllPermissions(adminRole.GetMultiTenancySide()).ToList();
 
-                await SetGrantedPermissionsAsync(adminRole, permissions);
-            }
+            //    permissions = permissions.Where(permission =>
+            //            permission.FeatureDependency == null ||
+            //            permission.FeatureDependency.IsSatisfied(featureDependencyContextObject)
+            //        ).ToList();
+
+            //    await SetGrantedPermissionsAsync(adminRole, permissions);
+            //}
         }
 
         public async Task CreateAndGrantPermissionAsync(Role role, List<string> permissions)

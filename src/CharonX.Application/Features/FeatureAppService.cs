@@ -99,6 +99,8 @@ namespace CharonX.Features
             await CurrentUnitOfWork.SaveChangesAsync();
             await _tenantManager.SetFeatureValuesAsync(tenant.Id,
                 input.FeatureNames.Select(f => new NameValue(f, "true")).ToArray());
+            await CurrentUnitOfWork.SaveChangesAsync();
+
         }
         /// <summary>
         /// 获取特定租户的全部功能包
