@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using Abp.Application.Services.Dto;
 using Abp.AutoMapper;
@@ -5,7 +6,7 @@ using Abp.MultiTenancy;
 
 namespace CharonX.MultiTenancy.Dto
 {
-    [AutoMapFrom(typeof(Tenant))]
+    [AutoMap(typeof(Tenant))]
     public class TenantDto : EntityDto
     {
         [Required]
@@ -19,6 +20,7 @@ namespace CharonX.MultiTenancy.Dto
 
         [StringLength(Tenant.MaxContactLength)]
         public string Contact { get; set; }
+  
         [StringLength(Tenant.MaxPhoneNumberLength)]
         public string AdminPhoneNumber { get; set; }
 
@@ -32,5 +34,6 @@ namespace CharonX.MultiTenancy.Dto
         public string LogoNode { get; set; }
 
         public bool IsActive { get; set; }
+        public DateTime CreationTime { get; set; }
     }
 }

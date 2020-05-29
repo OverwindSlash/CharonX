@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
+using Abp.AutoMapper;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Abp.Extensions;
@@ -164,17 +165,17 @@ namespace CharonX.MultiTenancy
                 .WhereIf(input.IsActive.HasValue, x => x.IsActive == input.IsActive);
         }
 
-        protected override void MapToEntity(TenantDto updateInput, Tenant entity)
-        {
-            // Manually mapped since TenantDto contains non-editable properties too.
-            entity.Name = updateInput.Name;
-            entity.TenancyName = updateInput.TenancyName;
-            entity.Contact = updateInput.Contact;
-            entity.Address = updateInput.Address;
-            entity.Logo = updateInput.Logo;
-            entity.LogoNode = updateInput.LogoNode;
-            entity.IsActive = updateInput.IsActive;
-        }
+        //protected override void MapToEntity(TenantDto updateInput, Tenant entity)
+        //{
+        //    // Manually mapped since TenantDto contains non-editable properties too.
+        //    entity.Name = updateInput.Name;
+        //    entity.TenancyName = updateInput.TenancyName;
+        //    entity.Contact = updateInput.Contact;
+        //    entity.Address = updateInput.Address;
+        //    entity.Logo = updateInput.Logo;
+        //    entity.LogoNode = updateInput.LogoNode;
+        //    entity.IsActive = updateInput.IsActive;
+        //}
 
         public override async Task DeleteAsync(EntityDto<int> input)
         {
@@ -201,6 +202,33 @@ namespace CharonX.MultiTenancy
         private void CheckErrors(IdentityResult identityResult)
         {
             identityResult.CheckErrors(LocalizationManager);
+        }
+
+        public override async Task<TenantDto> UpdateAsync(TenantDto input)
+        {
+            var tenant = await base.UpdateAsync(input);
+            using (CurrentUnitOfWork.SetTenantId(tenant.Id))
+            {
+                try
+                {
+                    var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
+                    if (adminUser.PhoneNumber != input.AdminPhoneNumber)
+                    {
+                        await CheckDuplicatedPhoneNumber(input.AdminPhoneNumber);
+                        adminUser.PhoneNumber = input.AdminPhoneNumber;
+                    }
+                }
+                catch (UserFriendlyException ex)
+                {
+                    throw ex;
+                }
+                catch (System.Exception)
+                {
+                    throw new UserFriendlyException("Can not find the admin user of tenant " + tenant.Name);
+                }
+
+            }
+            return tenant;
         }
     }
 }
