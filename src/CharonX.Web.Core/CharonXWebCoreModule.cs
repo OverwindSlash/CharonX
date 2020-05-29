@@ -14,10 +14,12 @@ using CharonX.Configuration;
 using CharonX.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using CharonX.Authorization.AuthCode;
+using Abp.Runtime.Caching.Redis;
 
 namespace CharonX
 {
     [DependsOn(
+         typeof(AbpRedisCacheModule),
          typeof(CharonXApplicationModule),
          typeof(CharonXEntityFrameworkModule),
          typeof(AbpAspNetCoreModule)
@@ -58,6 +60,11 @@ namespace CharonX
                     _maxRetryTimes = result;
                 }
                 cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(_maxRetryTimes);
+            });
+            Configuration.Caching.UseRedis(options =>
+            {
+                options.ConnectionString = _appConfiguration["RedisCache:ConnectionString"];
+                options.DatabaseId = _appConfiguration.GetValue<int>("RedisCache:DatabaseId");
             });
         }
 
