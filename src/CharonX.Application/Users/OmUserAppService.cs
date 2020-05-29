@@ -199,7 +199,7 @@ namespace CharonX.Users
 
                 if (input.EmailAddress != user.EmailAddress)
                 {
-                    await CheckDuplicatedEmail(user.EmailAddress);
+                    await CheckDuplicatedEmail(input.EmailAddress);
                 }
 
                 MapToEntity(input, user);
