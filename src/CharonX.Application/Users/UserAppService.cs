@@ -3,6 +3,7 @@ using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
+using Abp.Domain.Uow;
 using Abp.Extensions;
 using Abp.IdentityFramework;
 using Abp.Linq.Extensions;
@@ -11,10 +12,10 @@ using Abp.Organizations;
 using Abp.Runtime.Session;
 using Abp.UI;
 using CharonX.Authorization;
-using CharonX.Authorization.Accounts;
 using CharonX.Authorization.AuthCode;
 using CharonX.Authorization.Roles;
 using CharonX.Authorization.Users;
+using CharonX.MultiTenancy;
 using CharonX.Users.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -22,11 +23,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Abp.Authorization.Users;
-using Abp.Domain.Uow;
-using CharonX.MultiTenancy;
 
 namespace CharonX.Users
 {
@@ -96,6 +93,25 @@ namespace CharonX.Users
             return await GetAsync(new EntityDto<long>(user.Id));
         }
 
+        /// <summary>
+        /// 检查号码的可用性
+        /// </summary>
+        /// <param name="phoneNumber"></param>
+        /// <returns></returns>
+        public async Task<bool> CheckAvailableOfPhoneNumber(string phoneNumber)
+        {
+            try
+            {
+                await CheckDuplicatedPhoneNumber(phoneNumber);
+                return true;
+
+            }
+            catch (Exception exception)
+            {
+                return false;
+            }
+        }
+
         private async Task CheckDuplicatedPhoneNumber(string phoneNumber)
         {
             using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
@@ -104,6 +120,25 @@ namespace CharonX.Users
                 {
                     throw new UserFriendlyException(L("PhoneNumberDuplicated", phoneNumber));
                 }
+            }
+        }
+
+        /// <summary>
+        /// 检查邮箱的可用性
+        /// </summary>
+        /// <param name="emailAddress"></param>
+        /// <returns></returns>
+        public async Task<bool> CheckAvailableOfEmailAddress(string emailAddress)
+        {
+            try
+            {
+                await CheckDuplicatedEmail(emailAddress);
+                return true;
+
+            }
+            catch (Exception exception)
+            {
+                return false;
             }
         }
 
@@ -420,6 +455,7 @@ namespace CharonX.Users
 
             return true;
         }
+
         /// <summary>
         /// 通过当前租户管理员修改指定用户密码
         /// </summary>

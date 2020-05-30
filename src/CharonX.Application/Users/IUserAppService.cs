@@ -21,5 +21,9 @@ namespace CharonX.Users
         Task<bool> ChangePassword(ChangePasswordDto input);
 
         Task<bool> ActivateUser(ActivateUserDto input);
+
+        Task<bool> CheckAvailableOfPhoneNumber(string phoneNumber);
+
+        Task<bool> CheckAvailableOfEmailAddress(string emailAddress);
     }
 }
