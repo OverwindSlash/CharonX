@@ -61,6 +61,10 @@ namespace CharonX
                 }
                 cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(_maxRetryTimes);
             });
+            Configuration.Caching.Configure("TenantNumber", cache =>
+            {
+                cache.DefaultSlidingExpireTime = TimeSpan.FromSeconds(10);
+            });
             Configuration.Caching.UseRedis(options =>
             {
                 options.ConnectionString = _appConfiguration["RedisCache:ConnectionString"];
