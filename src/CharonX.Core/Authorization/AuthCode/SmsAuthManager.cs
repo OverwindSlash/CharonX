@@ -14,7 +14,7 @@ namespace CharonX.Authorization.AuthCode
     {
         public static string SmsAuthCodeCacheName = "SmsAuthCode";
         private const string SmsAuthCodeRetryTimesKey = ":Retried";
-        private const string SmsSendApiName = "/sms/sendPinCode";
+        private const string SmsSendApiName = "/sms/sendGatewayPinCode";
 
         private readonly ICacheManager _cacheManager;
         private readonly IConfigurationRoot _configuration;
@@ -73,6 +73,8 @@ namespace CharonX.Authorization.AuthCode
 
             var param = new
             {
+                appName = _configuration["SmsAuthCode:AppName"],
+                operationName = _configuration["SmsAuthCode:OperationName"],
                 phoneNumber = phoneNumber,
                 pinCode = authCode
             };
