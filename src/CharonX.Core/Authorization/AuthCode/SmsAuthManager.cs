@@ -64,7 +64,7 @@ namespace CharonX.Authorization.AuthCode
             return authCode;
         }
 
-        private void SendAuthCodeSms(string phoneNumber, string authCode)
+        private void SendAuthCodeSms(string mobilePhoneNumber, string authCode)
         {
             string smsUri = _smsServerUri.Trim('/') + SmsSendApiName;
 
@@ -73,15 +73,20 @@ namespace CharonX.Authorization.AuthCode
 
             var param = new
             {
-                appName = _configuration["SmsAuthCode:AppName"],
-                operationName = _configuration["SmsAuthCode:OperationName"],
-                phoneNumber = phoneNumber,
+                // TODO：Change hardcoding with configuration
+                //appName = _configuration["SmsAuthCode:AppName"],
+                //operationName = _configuration["SmsAuthCode:OperationName"],
+                appName = "澎思云",
+                operationName = "登录",
+                phoneNumber = mobilePhoneNumber,
                 pinCode = authCode
             };
 
             request.AddJsonBody(param);
 
             var response = client.Post(request);
+
+            Console.WriteLine("SendSmsCode: " + response.StatusCode + " " + response.ErrorMessage);
         }
 
         public async Task<bool> AuthenticateSmsCode(string phoneNumber, string smsAuthCode)
