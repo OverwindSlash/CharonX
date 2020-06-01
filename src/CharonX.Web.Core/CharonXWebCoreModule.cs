@@ -53,15 +53,18 @@ namespace CharonX
             ConfigureTokenAuth();
             Configuration.Caching.Configure(SmsAuthManager.SmsAuthCodeCacheName, cache =>
             {
-                var expireMinutesStr = _appConfiguration.GetSection(SmsAuthManager.SmsAuthCodeCacheName)["ExpireMinutes"];
-                int expireMinutes = 5;
-                if (Int32.TryParse(expireMinutesStr, out var result))
+                var expireMinutes = _appConfiguration.GetSection(SmsAuthManager.SmsAuthCodeCacheName)["ExpireMinutes"];
+                int _maxRetryTimes = 3;
+                if (Int32.TryParse(expireMinutes, out var result))
                 {
-                    expireMinutes = result;
+                    _maxRetryTimes = result;
                 }
-                cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(expireMinutes);
+                cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(_maxRetryTimes);
             });
-
+            Configuration.Caching.Configure("TenantNumber", cache =>
+            {
+                cache.DefaultSlidingExpireTime = TimeSpan.FromSeconds(10);
+            });
             Configuration.Caching.UseRedis(options =>
             {
                 options.ConnectionString = _appConfiguration["RedisCache:ConnectionString"];

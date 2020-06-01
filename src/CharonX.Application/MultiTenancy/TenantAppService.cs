@@ -8,6 +8,8 @@ using Abp.IdentityFramework;
 using Abp.Linq.Extensions;
 using Abp.MultiTenancy;
 using Abp.Organizations;
+using Abp.Runtime.Caching;
+using Abp.Threading.Extensions;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
@@ -16,7 +18,9 @@ using CharonX.Editions;
 using CharonX.MultiTenancy.Dto;
 using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
+using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CharonX.MultiTenancy
@@ -30,6 +34,8 @@ namespace CharonX.MultiTenancy
         private readonly RoleManager _roleManager;
         private readonly OrganizationUnitManager _orgUnitManager;
         private readonly IAbpZeroDbMigrator _abpZeroDbMigrator;
+        private readonly ICacheManager _cacheManager;
+        public const string PhoneNumberCacheName = "TenantNumber";
 
         public TenantAppService(
             IRepository<Tenant, int> repository,
@@ -38,7 +44,9 @@ namespace CharonX.MultiTenancy
             UserManager userManager,
             RoleManager roleManager,
             OrganizationUnitManager orgUnitManager,
-            IAbpZeroDbMigrator abpZeroDbMigrator)
+            IAbpZeroDbMigrator abpZeroDbMigrator,
+            ICacheManager cacheManager
+            )
             : base(repository)
         {
             _tenantManager = tenantManager;
@@ -47,7 +55,7 @@ namespace CharonX.MultiTenancy
             _roleManager = roleManager;
             _orgUnitManager = orgUnitManager;
             _abpZeroDbMigrator = abpZeroDbMigrator;
-
+            _cacheManager = cacheManager;
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
 
@@ -113,6 +121,17 @@ namespace CharonX.MultiTenancy
 
         private async Task CheckDuplicatedPhoneNumber(string phoneNumber)
         {
+            //write phoneNumber to redis for uniqueness checking
+            var cache = _cacheManager.GetCache(PhoneNumberCacheName);
+            if (cache.GetOrDefault(phoneNumber) == null)
+            {
+                cache.Set(phoneNumber, 1);
+            }
+            else
+            {
+                throw new UserFriendlyException(L("PhoneNumberDuplicated", phoneNumber));
+            }
+            
             using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
             {
                 if (await _userManager.CheckDuplicateMobilePhoneAsync(phoneNumber))
