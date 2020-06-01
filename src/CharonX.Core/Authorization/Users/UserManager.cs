@@ -3,9 +3,9 @@ using Abp.Authorization.Users;
 using Abp.Configuration;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
-using Abp.IdentityFramework;
 using Abp.Organizations;
 using Abp.Runtime.Caching;
+using Abp.UI;
 using CharonX.Authorization.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +24,8 @@ namespace CharonX.Authorization.Users
         private readonly UserStore _store;
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
         private readonly IRepository<UserRole, long> _userRoleRepository;
-
+        private readonly ICacheManager _cacheManager;
+        public const string TenantContactMethodCacheName = "TenantContactMethod";
         public UserManager(
             RoleManager roleManager,
             UserStore store,
@@ -67,7 +68,7 @@ namespace CharonX.Authorization.Users
             _store = store;
             _orgUnitRepository = organizationUnitRepository;
             _userRoleRepository = userRoleRepository;
-
+            _cacheManager = cacheManager;
             LocalizationSourceName = "CharonX";
         }
 
@@ -145,6 +146,16 @@ namespace CharonX.Authorization.Users
 
         public async Task<bool> CheckDuplicateMobilePhoneAsync(string phoneNumber)
         {
+            //write phoneNumber to redis for uniqueness checking
+            var cache = _cacheManager.GetCache(TenantContactMethodCacheName);
+            if (cache.GetOrDefault(phoneNumber) == null)
+            {
+                cache.Set(phoneNumber, 1);
+            }
+            else
+            {
+                throw new UserFriendlyException(string.Format(L("PhoneNumberDuplicated"),phoneNumber));
+            }
             return await _store.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
         }
 
@@ -155,8 +166,18 @@ namespace CharonX.Authorization.Users
 
         public async Task<bool> CheckDuplicateEmailAsync(string email)
         {
+            var cache = _cacheManager.GetCache(TenantContactMethodCacheName);
+            if (cache.GetOrDefault(email) == null)
+            {
+                cache.Set(email, 1);
+            }
+            else
+            {
+                throw new UserFriendlyException(string.Format(L("EmailAddressDuplicated"),email));
+            }
             return await _store.Users.AnyAsync(u => u.EmailAddress == email);
         }
+
 
         public override async Task<IList<User>> GetUsersInRoleAsync(string roleName)
         {

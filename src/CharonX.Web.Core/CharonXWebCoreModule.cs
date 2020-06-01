@@ -61,7 +61,7 @@ namespace CharonX
                 }
                 cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(expireMinutes);
             });
-            Configuration.Caching.Configure("TenantNumber", cache =>
+            Configuration.Caching.Configure("TenantContactMethod", cache =>
             {
                 cache.DefaultSlidingExpireTime = TimeSpan.FromSeconds(10);
             });
