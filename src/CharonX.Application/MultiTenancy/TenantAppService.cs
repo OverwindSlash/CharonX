@@ -8,8 +8,6 @@ using Abp.IdentityFramework;
 using Abp.Linq.Extensions;
 using Abp.MultiTenancy;
 using Abp.Organizations;
-using Abp.Runtime.Caching;
-using Abp.Threading.Extensions;
 using Abp.UI;
 using CharonX.Authorization;
 using CharonX.Authorization.Roles;
@@ -18,9 +16,7 @@ using CharonX.Editions;
 using CharonX.MultiTenancy.Dto;
 using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
-using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CharonX.MultiTenancy
@@ -31,6 +27,7 @@ namespace CharonX.MultiTenancy
         private readonly TenantManager _tenantManager;
         private readonly EditionManager _editionManager;
         private readonly UserManager _userManager;
+        private readonly IRepository<User, long> _userRepository;
         private readonly RoleManager _roleManager;
         private readonly OrganizationUnitManager _orgUnitManager;
         private readonly IAbpZeroDbMigrator _abpZeroDbMigrator;
@@ -40,6 +37,7 @@ namespace CharonX.MultiTenancy
             TenantManager tenantManager,
             EditionManager editionManager,
             UserManager userManager,
+            IRepository<User, long> userRepository,
             RoleManager roleManager,
             OrganizationUnitManager orgUnitManager,
             IAbpZeroDbMigrator abpZeroDbMigrator
@@ -49,6 +47,7 @@ namespace CharonX.MultiTenancy
             _tenantManager = tenantManager;
             _editionManager = editionManager;
             _userManager = userManager;
+            _userRepository = userRepository;
             _roleManager = roleManager;
             _orgUnitManager = orgUnitManager;
             _abpZeroDbMigrator = abpZeroDbMigrator;
@@ -112,7 +111,10 @@ namespace CharonX.MultiTenancy
                 await CurrentUnitOfWork.SaveChangesAsync();
             }
 
-            return MapToEntityDto(tenant);
+            var dto = MapToEntityDto(tenant);
+            await SetPhoneNumberAndEmailAddress(dto);
+
+            return dto;
         }
 
         private async Task CheckDuplicatedPhoneNumber(string phoneNumber)
@@ -137,6 +139,14 @@ namespace CharonX.MultiTenancy
             }
         }
 
+        public override async Task<TenantDto> GetAsync(EntityDto<int> input)
+        {
+            var dto = await base.GetAsync(input);
+            await SetPhoneNumberAndEmailAddress(dto);
+
+            return dto;
+        }
+
         public override async Task<PagedResultDto<TenantDto>> GetAllAsync(PagedTenantResultRequestDto input)
         {
             var tenants= await base.GetAllAsync(input);
@@ -147,8 +157,7 @@ namespace CharonX.MultiTenancy
                 {
                     try
                     {
-                        var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
-                        tenant.AdminPhoneNumber = adminUser.PhoneNumber;
+                        await SetPhoneNumberAndEmailAddress(tenant);
                     }
                     catch (System.Exception)
                     {
@@ -159,6 +168,13 @@ namespace CharonX.MultiTenancy
             }
 
             return tenants;
+        }
+
+        private async Task SetPhoneNumberAndEmailAddress(TenantDto tenant)
+        {
+            var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
+            tenant.AdminPhoneNumber = adminUser.PhoneNumber;
+            tenant.AdminEmailAddress = adminUser.EmailAddress;
         }
 
         protected override IQueryable<Tenant> CreateFilteredQuery(PagedTenantResultRequestDto input)
@@ -190,6 +206,16 @@ namespace CharonX.MultiTenancy
             CheckDeletePermission();
 
             var tenant = await _tenantManager.GetByIdAsync(input.Id);
+
+            using (CurrentUnitOfWork.SetTenantId(tenant.Id))
+            {
+                var users = _userRepository.GetAll().ToList();
+                foreach (User user in users)
+                {
+                    await _userRepository.DeleteAsync(user);
+                }
+            }
+
             await _tenantManager.DeleteAsync(tenant);
         }
 
@@ -220,10 +246,17 @@ namespace CharonX.MultiTenancy
                 try
                 {
                     var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
+
                     if (adminUser.PhoneNumber != input.AdminPhoneNumber)
                     {
                         await CheckDuplicatedPhoneNumber(input.AdminPhoneNumber);
                         adminUser.PhoneNumber = input.AdminPhoneNumber;
+                    }
+
+                    if (adminUser.EmailAddress != input.AdminEmailAddress)
+                    {
+                        await CheckDuplicatedEmail(input.AdminEmailAddress);
+                        adminUser.EmailAddress = input.AdminEmailAddress;
                     }
                 }
                 catch (UserFriendlyException ex)

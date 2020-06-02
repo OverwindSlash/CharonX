@@ -1,8 +1,9 @@
-using System;
-using System.ComponentModel.DataAnnotations;
 using Abp.Application.Services.Dto;
+using Abp.Authorization.Users;
 using Abp.AutoMapper;
 using Abp.MultiTenancy;
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace CharonX.MultiTenancy.Dto
 {
@@ -24,6 +25,9 @@ namespace CharonX.MultiTenancy.Dto
         [StringLength(Tenant.MaxPhoneNumberLength)]
         public string AdminPhoneNumber { get; set; }
 
+        [StringLength(AbpUserBase.MaxEmailAddressLength)]
+        public string AdminEmailAddress { get; set; }
+
         [StringLength(Tenant.MaxAddressLength)]
         public string Address { get; set; }
 
@@ -34,6 +38,7 @@ namespace CharonX.MultiTenancy.Dto
         public string LogoNode { get; set; }
 
         public bool IsActive { get; set; }
+
         public DateTime CreationTime { get; set; }
     }
 }
