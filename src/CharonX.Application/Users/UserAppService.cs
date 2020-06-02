@@ -98,7 +98,7 @@ namespace CharonX.Users
         /// </summary>
         /// <param name="phoneNumber"></param>
         /// <returns></returns>
-        [HttpGet]
+        //[HttpGet]
         [AbpAllowAnonymous]
         public async Task<bool> CheckAvailableOfPhoneNumber(string phoneNumber)
         {
@@ -130,7 +130,7 @@ namespace CharonX.Users
         /// </summary>
         /// <param name="emailAddress"></param>
         /// <returns></returns>
-        [HttpGet]
+        //[HttpGet]
         [AbpAllowAnonymous]
         public async Task<bool> CheckAvailableOfEmailAddress(string emailAddress)
         {
