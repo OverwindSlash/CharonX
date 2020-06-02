@@ -122,6 +122,8 @@ namespace CharonX.Users
                     adminUsers = adminUsers.Where(u => u.IsActive == input.IsActive.Value).ToList();
                 }
 
+                int totalCount = adminUsers.Count;
+
                 var query = adminUsers.AsQueryable();
                 query = PagingHelper.ApplySorting<User, long>(query, input);
                 query = PagingHelper.ApplyPaging<User, long>(query, input);
@@ -140,7 +142,7 @@ namespace CharonX.Users
                     userDtos.Add(userDto);
                 }
 
-                return new PagedResultDto<UserDto>(adminUsers.Count, userDtos);
+                return new PagedResultDto<UserDto>(totalCount, userDtos);
             }
         }
         /// <summary>
