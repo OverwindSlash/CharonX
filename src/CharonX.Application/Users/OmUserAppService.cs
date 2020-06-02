@@ -140,7 +140,7 @@ namespace CharonX.Users
                     userDtos.Add(userDto);
                 }
 
-                return new PagedResultDto<UserDto>(userDtos.Count, userDtos);
+                return new PagedResultDto<UserDto>(adminUsers.Count, userDtos);
             }
         }
         /// <summary>
