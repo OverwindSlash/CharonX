@@ -1,4 +1,6 @@
-﻿using Abp.Application.Services;
+﻿using System;
+using System.Diagnostics;
+using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
@@ -18,18 +20,22 @@ using CharonX.Organizations;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Runtime.Caching;
 
 namespace CharonX.MultiTenancy
 {
     [AbpAuthorize(PermissionNames.Pages_Tenants)]
     public class TenantAppService : AsyncCrudAppService<Tenant, TenantDto, int, PagedTenantResultRequestDto, CreateTenantDto, TenantDto>, ITenantAppService
     {
+        public static string TenantAdminCacheName = "TenantAdmin";
+
         private readonly TenantManager _tenantManager;
         private readonly EditionManager _editionManager;
         private readonly UserManager _userManager;
         private readonly IRepository<User, long> _userRepository;
         private readonly RoleManager _roleManager;
         private readonly OrganizationUnitManager _orgUnitManager;
+        private readonly ICacheManager _cacheManager;
         private readonly IAbpZeroDbMigrator _abpZeroDbMigrator;
 
         public TenantAppService(
@@ -40,6 +46,7 @@ namespace CharonX.MultiTenancy
             IRepository<User, long> userRepository,
             RoleManager roleManager,
             OrganizationUnitManager orgUnitManager,
+            ICacheManager cacheManager,
             IAbpZeroDbMigrator abpZeroDbMigrator
             )
             : base(repository)
@@ -50,6 +57,7 @@ namespace CharonX.MultiTenancy
             _userRepository = userRepository;
             _roleManager = roleManager;
             _orgUnitManager = orgUnitManager;
+            _cacheManager = cacheManager;
             _abpZeroDbMigrator = abpZeroDbMigrator;
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -149,8 +157,15 @@ namespace CharonX.MultiTenancy
 
         public override async Task<PagedResultDto<TenantDto>> GetAllAsync(PagedTenantResultRequestDto input)
         {
-            var tenants= await base.GetAllAsync(input);
+            Stopwatch sw = new Stopwatch();
 
+            sw.Start();
+            var tenants= await base.GetAllAsync(input);
+            sw.Stop();
+            Console.WriteLine($"GetAllAsync:{sw.ElapsedMilliseconds}");
+            sw.Reset();
+
+            sw.Start();
             foreach (var tenant in tenants.Items)
             {
                 using (CurrentUnitOfWork.SetTenantId(tenant.Id))
@@ -166,15 +181,40 @@ namespace CharonX.MultiTenancy
                     
                 }
             }
+            sw.Stop();
+            Console.WriteLine($"foreach:{sw.ElapsedMilliseconds}");
 
             return tenants;
         }
 
         private async Task SetPhoneNumberAndEmailAddress(TenantDto tenant)
         {
-            var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
-            tenant.AdminPhoneNumber = adminUser.PhoneNumber;
-            tenant.AdminEmailAddress = adminUser.EmailAddress;
+            ICache tenantAdminCache = _cacheManager.GetCache(TenantAdminCacheName);
+
+            string phoneAndEmail = await tenantAdminCache.GetAsync(tenant.Id, () => QueryDefaultAdminInfo(tenant.Id));
+
+            if (string.IsNullOrEmpty(phoneAndEmail))
+            {
+                return;
+            }
+
+            string[] infoArray = phoneAndEmail.Split('|');
+            if (infoArray.Length != 2)
+            {
+                return;
+            }
+            tenant.AdminPhoneNumber = infoArray[0];
+            tenant.AdminEmailAddress = infoArray[1];
+        }
+
+        private async Task<string> QueryDefaultAdminInfo(int tenantId)
+        {
+            using (CurrentUnitOfWork.SetTenantId(tenantId))
+            {
+                var adminUser = await _userManager.FindByNameAsync(StaticRoleNames.Tenants.Admin);
+
+                return $"{adminUser.PhoneNumber}|{adminUser.EmailAddress}";
+            }
         }
 
         protected override IQueryable<Tenant> CreateFilteredQuery(PagedTenantResultRequestDto input)
@@ -217,6 +257,9 @@ namespace CharonX.MultiTenancy
             }
 
             await _tenantManager.DeleteAsync(tenant);
+
+            ICache tenantAdminCache = _cacheManager.GetCache(TenantAdminCacheName);
+            await tenantAdminCache.RemoveAsync(tenant.Id.ToString());
         }
 
         public async Task<bool> ActivateTenant(ActivateTenantDto input)
@@ -258,6 +301,9 @@ namespace CharonX.MultiTenancy
                         await CheckDuplicatedEmail(input.AdminEmailAddress);
                         adminUser.EmailAddress = input.AdminEmailAddress;
                     }
+
+                    ICache tenantAdminCache = _cacheManager.GetCache(TenantAdminCacheName);
+                    await tenantAdminCache.RemoveAsync(tenant.Id.ToString());
                 }
                 catch (UserFriendlyException ex)
                 {
