@@ -79,8 +79,7 @@ namespace CharonX.Authorization.Roles
 
         public async Task UpdateRoleAndPermissionAsync(Role role, List<string> permissions)
         {
-            await ResetAllPermissionsAsync(role);
-
+            //await ResetAllPermissionsAsync(role);
             CheckErrors(await UpdateAsync(role));
 
             var grantedPermissions = _permissionManager.GetAllPermissions()
@@ -89,7 +88,7 @@ namespace CharonX.Authorization.Roles
 
             await SetGrantedPermissionsAsync(role, grantedPermissions);
         }
-
+        
         public async Task DeleteRoleAndDetachUserAsync(Role role)
         {
             UserManager userManager = _iocManager.Resolve<UserManager>();
