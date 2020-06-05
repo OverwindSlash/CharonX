@@ -86,7 +86,7 @@ namespace CharonX.Tests.Features
             features.Count.ShouldBe(1);
 
             var permissions = await _featureAppService.GetTenantPermissionsAsync(tenantDto.Id);
-            permissions.Items.Count.ShouldBe(3);
+            permissions.Items.Count.ShouldBe(83);
         }
 
         [Fact]
@@ -118,7 +118,7 @@ namespace CharonX.Tests.Features
             features1.Count.ShouldBe(2);
 
             var permissions1 = await _featureAppService.GetTenantPermissionsAsync(tenantDto.Id);
-            permissions1.Items.Count.ShouldBe(4);
+            permissions1.Items.Count.ShouldBe(84);
 
             // Reset feature to remain one left
             EnableFeatureDto enableFeature2Dto = new EnableFeatureDto()
@@ -141,7 +141,7 @@ namespace CharonX.Tests.Features
         public void GetAllPermissions_Test()
         {
             var allPermissions = _featureAppService.GetAllPermissionsInSystem();
-            allPermissions.Items.Count.ShouldBe(5);
+            allPermissions.Items.Count.ShouldBe(85);
         }
     }
 }

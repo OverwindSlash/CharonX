@@ -15,6 +15,7 @@ using CharonX.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using CharonX.Authorization.AuthCode;
 using Abp.Runtime.Caching.Redis;
+using CharonX.MultiTenancy;
 
 namespace CharonX
 {
@@ -61,10 +62,17 @@ namespace CharonX
                 }
                 cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(expireMinutes);
             });
+
             Configuration.Caching.Configure("TenantContactMethod", cache =>
             {
                 cache.DefaultSlidingExpireTime = TimeSpan.FromSeconds(10);
             });
+
+            Configuration.Caching.Configure(TenantAppService.TenantAdminCacheName, cache =>
+            {
+                cache.DefaultSlidingExpireTime = TimeSpan.FromDays(1);
+            });
+
             Configuration.Caching.UseRedis(options =>
             {
                 options.ConnectionString = _appConfiguration["RedisCache:ConnectionString"];
