@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
@@ -21,6 +22,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Runtime.Caching;
+using Microsoft.EntityFrameworkCore;
 
 namespace CharonX.MultiTenancy
 {
@@ -162,9 +164,9 @@ namespace CharonX.MultiTenancy
             sw.Start();
             var tenants= await base.GetAllAsync(input);
             sw.Stop();
-            Console.WriteLine($"GetAllAsync:{sw.ElapsedMilliseconds}");
-            sw.Reset();
+            Console.WriteLine($"TenantAppService.GetAllAsync:{sw.ElapsedMilliseconds}");
 
+            sw.Reset();
             sw.Start();
             foreach (var tenant in tenants.Items)
             {
@@ -178,11 +180,10 @@ namespace CharonX.MultiTenancy
                     {
                         throw new UserFriendlyException("Can not find the admin user of tenant " + tenant.Name);
                     }
-                    
                 }
             }
             sw.Stop();
-            Console.WriteLine($"foreach:{sw.ElapsedMilliseconds}");
+            Console.WriteLine($"TenantAppService.foreach:{sw.ElapsedMilliseconds}");
 
             return tenants;
         }
@@ -258,8 +259,13 @@ namespace CharonX.MultiTenancy
 
             await _tenantManager.DeleteAsync(tenant);
 
+            await RemoveTenantAdminCacheItem(tenant.Id);
+        }
+
+        private async Task RemoveTenantAdminCacheItem(int tenantId)
+        {
             ICache tenantAdminCache = _cacheManager.GetCache(TenantAdminCacheName);
-            await tenantAdminCache.RemoveAsync(tenant.Id.ToString());
+            await tenantAdminCache.RemoveAsync(tenantId.ToString());
         }
 
         public async Task<bool> ActivateTenant(ActivateTenantDto input)
@@ -302,8 +308,7 @@ namespace CharonX.MultiTenancy
                         adminUser.EmailAddress = input.AdminEmailAddress;
                     }
 
-                    ICache tenantAdminCache = _cacheManager.GetCache(TenantAdminCacheName);
-                    await tenantAdminCache.RemoveAsync(tenant.Id.ToString());
+                    await RemoveTenantAdminCacheItem(tenant.Id);
                 }
                 catch (UserFriendlyException ex)
                 {

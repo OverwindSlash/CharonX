@@ -22,8 +22,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Runtime.Caching;
+using CharonX.Roles;
 
 namespace CharonX.Users
 {
@@ -40,6 +43,7 @@ namespace CharonX.Users
         private readonly LogInManager _logInManager;
         private readonly IRepository<OrganizationUnit, long> _orgUnitRepository;
         private readonly SmsAuthManager _smsAuthManager;
+        private readonly ICacheManager _cacheManager;
 
         public UserAppService(
             IRepository<User, long> repository,
@@ -51,7 +55,8 @@ namespace CharonX.Users
             IAbpSession abpSession,
             LogInManager logInManager,
             IRepository<OrganizationUnit, long> orgUnitRepository,
-            SmsAuthManager smsAuthManager)
+            SmsAuthManager smsAuthManager,
+            ICacheManager cacheManager)
             : base(repository)
         {
             _repository = repository;
@@ -64,6 +69,7 @@ namespace CharonX.Users
             _logInManager = logInManager;
             _orgUnitRepository = orgUnitRepository;
             _smsAuthManager = smsAuthManager;
+            _cacheManager = cacheManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -188,18 +194,62 @@ namespace CharonX.Users
         /// <returns></returns>
         public override async Task<PagedResultDto<UserDto>> GetAllAsync(PagedUserResultRequestDto input)
         {
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
             var pagedResult = await base.GetAllAsync(input);
+            sw.Stop();
+            Console.WriteLine($"UserAppService.GetAllAsync:{sw.ElapsedMilliseconds}");
+
+            ICache rolePermissionCache = _cacheManager.GetCache(RoleAppService.RolePermissionCacheName);
+
             foreach (var userDto in pagedResult.Items)
             {
+                sw.Reset();
+                sw.Start();
                 var user = await _userManager.GetUserByIdAsync(userDto.Id);
+                sw.Stop();
+                Console.WriteLine($"UserAppService.GetUserByIdAsync:{sw.ElapsedMilliseconds}");
+
+                sw.Reset();
+                sw.Start();
                 userDto.OrgUnitNames = await _userManager.GetOrgUnitsOfUserAsync(user);
+                sw.Stop();
+                Console.WriteLine($"UserAppService.GetOrgUnitsOfUserAsync:{sw.ElapsedMilliseconds}");
+
+                sw.Reset();
+                sw.Start();
                 userDto.RoleNames = await _userManager.GetRolesOfUserAsync(user);
+                sw.Stop();
+                Console.WriteLine($"UserAppService.GetOrgUnitsOfUserAsync:{sw.ElapsedMilliseconds}");
+
                 userDto.IsAdmin = userDto.RoleNames.Contains("Admin");
-                userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
+
+                sw.Reset();
+                sw.Start();
+                List<string> permissionNames = new List<string>();
+                foreach (string roleName in userDto.RoleNames)
+                {
+                    var permissions =  await rolePermissionCache.GetAsync(
+                        $"{user.TenantId}:{roleName}",() => GetRolePermissions(roleName));
+                    permissionNames.AddRange(permissions);
+                }
+                userDto.Permissions = permissionNames.Distinct().ToArray();
+                sw.Stop();
+                Console.WriteLine($"UserAppService.foreach:{sw.ElapsedMilliseconds}");
+
+                //userDto.Permissions = await _userManager.GetPermissionsOfUserAsync(user);
             }
 
             return pagedResult;
         }
+
+        private async Task<IList<string>> GetRolePermissions(string roleName)
+        {
+            var permissions = await _roleManager.GetGrantedPermissionsAsync(roleName);
+            return permissions.Select(p => p.Name).ToList();
+        }
+
         /// <summary>
         /// 更新当前租户的某一用户
         /// </summary>

@@ -16,23 +16,29 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Runtime.Caching;
 
 namespace CharonX.Roles
 {
     [AbpAuthorize(PermissionNames.Pages_Roles)]
     public class RoleAppService : AsyncCrudAppService<Role, RoleDto, int, PagedRoleResultRequestDto, CreateRoleDto, RoleDto>, IRoleAppService
     {
+        public static string RolePermissionCacheName = "RolePermissions";
+
         private readonly RoleManager _roleManager;
         private readonly UserManager _userManager;
+        private readonly ICacheManager _cacheManager;
 
         public RoleAppService(
             IRepository<Role> repository, 
             RoleManager roleManager,
-            UserManager userManager)
+            UserManager userManager,
+            ICacheManager cacheManager)
             : base(repository)
         {
             _roleManager = roleManager;
             _userManager = userManager;
+            _cacheManager = cacheManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -179,8 +185,17 @@ namespace CharonX.Roles
 
             await _roleManager.UpdateRoleAndPermissionAsync(role, input.GrantedPermissions);
 
+            await RemoveRolePermissionCacheItem(role);
+
             return MapToEntityDto(role);
         }
+
+        private async Task RemoveRolePermissionCacheItem(Role role)
+        {
+            ICache rolePermissionCache = _cacheManager.GetCache(RolePermissionCacheName);
+            await rolePermissionCache.RemoveAsync($"{AbpSession.TenantId}:{role.Name}");
+        }
+
         /// <summary>
         /// 删除当前租户的某一角色
         /// </summary>
@@ -206,6 +221,8 @@ namespace CharonX.Roles
             // CheckErrors(await _roleManager.DeleteAsync(role));
 
             await _roleManager.DeleteRoleAndDetachUserAsync(role);
+
+            await RemoveRolePermissionCacheItem(role);
         }
 
         protected override IQueryable<Role> CreateFilteredQuery(PagedRoleResultRequestDto input)
