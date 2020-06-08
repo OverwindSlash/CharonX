@@ -125,7 +125,10 @@ namespace CharonX.Users
                 int totalCount = adminUsers.Count;
 
                 var query = adminUsers.AsQueryable();
-                query = PagingHelper.ApplySorting<User, long>(query, input);
+                query = PagingHelper.ApplySorting<User, long>(query, new PagedAndSortedResultRequestDto()
+                {
+                    Sorting = "CreationTime DESC"
+                });
                 query = PagingHelper.ApplyPaging<User, long>(query, input);
                 adminUsers = query.ToList();
 
