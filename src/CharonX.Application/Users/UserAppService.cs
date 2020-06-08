@@ -104,7 +104,14 @@ namespace CharonX.Users
         {
             try
             {
-                await CheckDuplicatedPhoneNumber(phoneNumber);
+                //await CheckDuplicatedPhoneNumber(phoneNumber);
+                using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+                {
+                    if (await _userManager.CheckDuplicateMobilePhoneInStoreAsync(phoneNumber))
+                    {
+                        throw new UserFriendlyException(L("PhoneNumberDuplicated", phoneNumber));
+                    }
+                }
                 return true;
 
             }

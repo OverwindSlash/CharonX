@@ -158,6 +158,10 @@ namespace CharonX.Authorization.Users
             }
             return await _store.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
         }
+        public async Task<bool> CheckDuplicateMobilePhoneInStoreAsync(string phoneNumber)
+        {
+            return await _store.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
+        }
 
         //public async Task<bool> CheckDuplicateUsernameAsync(string usernanme)
         //{
