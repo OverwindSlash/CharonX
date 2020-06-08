@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using CharonX.Authorization.AuthCode;
 using Abp.Runtime.Caching.Redis;
 using CharonX.MultiTenancy;
+using CharonX.Roles;
 
 namespace CharonX
 {
@@ -69,6 +70,11 @@ namespace CharonX
             });
 
             Configuration.Caching.Configure(TenantAppService.TenantAdminCacheName, cache =>
+            {
+                cache.DefaultSlidingExpireTime = TimeSpan.FromDays(1);
+            });
+
+            Configuration.Caching.Configure(RoleAppService.RolePermissionCacheName, cache =>
             {
                 cache.DefaultSlidingExpireTime = TimeSpan.FromDays(1);
             });

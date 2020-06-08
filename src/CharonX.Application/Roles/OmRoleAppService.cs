@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Abp.Runtime.Caching;
 
 namespace CharonX.Roles
 {
@@ -24,15 +25,18 @@ namespace CharonX.Roles
         private readonly RoleManager _roleManager;
         private readonly TenantManager _tenantManager;
         private readonly UserManager _userManager;
+        private readonly ICacheManager _cacheManager;
 
         public OmRoleAppService(
             RoleManager roleManager,
             TenantManager tenantManager,
-            UserManager userManager)
+            UserManager userManager,
+            ICacheManager cacheManager)
         {
             _roleManager = roleManager;
             _tenantManager = tenantManager;
             _userManager = userManager;
+            _cacheManager = cacheManager;
 
             LocalizationSourceName = CharonXConsts.LocalizationSourceName;
         }
@@ -144,6 +148,8 @@ namespace CharonX.Roles
 
                     await _roleManager.UpdateRoleAndPermissionAsync(role, input.GrantedPermissions);
 
+                    await RemoveRolePermissionCacheItem(tenantId, role);
+
                     return ObjectMapper.Map<RoleDto>(role);
                 }
                 catch (Exception exception)
@@ -152,6 +158,13 @@ namespace CharonX.Roles
                 }
             }
         }
+
+        private async Task RemoveRolePermissionCacheItem(int tenantId, Role role)
+        {
+            ICache rolePermissionCache = _cacheManager.GetCache(RoleAppService.RolePermissionCacheName);
+            await rolePermissionCache.RemoveAsync($"{tenantId}:{role.Name}");
+        }
+
         /// <summary>
         /// 运维专用：删除特定租户下的某一角色
         /// </summary>
@@ -169,6 +182,8 @@ namespace CharonX.Roles
                 }
 
                 await _roleManager.DeleteRoleAndDetachUserAsync(role);
+
+                await RemoveRolePermissionCacheItem(tenantId, role);
             }
         }
         /// <summary>
