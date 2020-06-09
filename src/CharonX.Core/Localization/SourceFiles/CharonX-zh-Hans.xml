@@ -113,6 +113,7 @@
 
     <text name="SmartSecurityFeature">智慧安防功能包</text>
     <text name="SmartPassFeature">智慧通行功能包</text>
+    <text name="UserExpired">该用户已于 {0} 失效</text>
   </texts>
 </localizationDictionary>
 

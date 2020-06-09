@@ -118,5 +118,6 @@
     <text name="SearchWithThreeDot">Search...</text>
     <text name="SmartSecurityFeature">Smart security feature</text>
     <text name="SmartPassFeature">Smart pass feature</text>
+    <text name="UserExpired">Your user has been expired at {0}</text>
   </texts>
 </localizationDictionary>

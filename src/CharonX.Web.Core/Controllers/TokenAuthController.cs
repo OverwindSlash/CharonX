@@ -345,10 +345,15 @@ namespace CharonX.Controllers
         private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress, string password, string tenancyName)
         {
             var loginResult = await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName);
-
+            
             switch (loginResult.Result)
             {
                 case AbpLoginResultType.Success:
+                    //check expireDate
+                    if (loginResult.User.ExpireDate > DateTime.MinValue &&loginResult.User.ExpireDate<DateTime.Now)
+                    {
+                        throw new UserFriendlyException(L("UserExpired",loginResult.User.ExpireDate.ToShortDateString()));
+                    }
                     return loginResult;
                 default:
                     throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(loginResult.Result, usernameOrEmailAddress, tenancyName);
