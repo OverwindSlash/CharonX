@@ -6,11 +6,17 @@ namespace CharonX.MultiTenancy
 {
     public class Tenant : AbpTenant<User>
     {
+        public const int MaxNameLength = 256;
         public const int MaxLogoLength = 256;
         public const int MaxLogoNodeLength = 256;
         public const int MaxContactLength = 128;
         public const int MaxPhoneNumberLength = 32;
         public const int MaxAddressLength = 256;
+        //public const int MaxAddressLength = 1024;
+
+        //[Required]
+        //[StringLength(MaxNameLength)]
+        //public override string Name { get; set; }
 
         [Required]
         [StringLength(MaxPhoneNumberLength)]
