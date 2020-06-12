@@ -149,7 +149,14 @@ namespace CharonX.Users
         {
             try
             {
-                await CheckDuplicatedEmail(emailAddress);
+                //await CheckDuplicatedEmail(emailAddress);
+                using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+                {
+                    if (await _userManager.CheckDuplicateEmailInStoreAsync(emailAddress))
+                    {
+                        throw new UserFriendlyException(L("EmailAddressDuplicated", emailAddress));
+                    }
+                }
                 return true;
 
             }
