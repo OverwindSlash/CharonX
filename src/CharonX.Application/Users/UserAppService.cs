@@ -286,12 +286,12 @@ namespace CharonX.Users
 
             if (input.PhoneNumber != user.PhoneNumber)
             {
-                await CheckDuplicatedPhoneNumber(user.PhoneNumber);
+                await CheckDuplicatedPhoneNumber(input.PhoneNumber);
             }
-
+            input.EmailAddress = string.IsNullOrEmpty(input.EmailAddress) ? user.EmailAddress : input.EmailAddress;
             if (input.EmailAddress != user.EmailAddress)
             {
-                await CheckDuplicatedEmail(user.EmailAddress);
+                await CheckDuplicatedEmail(input.EmailAddress);
             }
 
             MapToEntity(input, user);   
