@@ -29,4 +29,5 @@ RUN dotnet publish "CharonX.Web.Host.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ComPlus_ThreadPool_ForceMinWorkerThreads=200
 ENTRYPOINT ["dotnet", "CharonX.Web.Host.dll"]
