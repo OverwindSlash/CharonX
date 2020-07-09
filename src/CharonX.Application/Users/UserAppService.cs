@@ -427,7 +427,7 @@ namespace CharonX.Users
             user.City = input.City;
             user.ExpireDate = input.ExpireDate;
             user.EmailAddress = input.EmailAddress;
-            user.IsActive = input.IsActive;
+            user.IsActive = input.IsActive??user.IsActive;
             
             user.SetNormalizedNames();
         }

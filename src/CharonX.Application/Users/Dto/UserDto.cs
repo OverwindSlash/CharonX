@@ -44,7 +44,7 @@ namespace CharonX.Users.Dto
         [StringLength(AbpUserBase.MaxEmailAddressLength)]
         public string EmailAddress { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         public string FullName { get; set; }
 
@@ -58,6 +58,6 @@ namespace CharonX.Users.Dto
 
         public string[] Permissions { get; set; }
 
-        public bool IsAdmin { get; set; }
+        public bool? IsAdmin { get; set; }
     }
 }
