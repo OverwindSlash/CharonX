@@ -137,7 +137,44 @@ namespace CharonX.Controllers
                 UserId = loginResult.User.Id
             };
         }
+        [HttpPost]
+        public async Task<AuthenticateResultModel> AuthenticateByEmail([FromBody] EmailAuthenticateModel model)
+        {
+            string username = string.Empty;
+            string tenantName = string.Empty;
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.EmailAddress == model.EmailAdress);
+                if (user == null)
+                {
+                    throw new UserFriendlyException(L("EmailAdressNotExist", model.EmailAdress));
+                }
+                username = user.UserName;
 
+                if (user.TenantId.HasValue)
+                {
+                    tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
+                }
+            }
+
+            var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
+
+            int? tenantId = null;
+            if (loginResult.Tenant != null)
+            {
+                tenantId = loginResult.Tenant.Id;
+            }
+
+            var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+            return new AuthenticateResultModel
+            {
+                AccessToken = accessToken,
+                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+                UserId = loginResult.User.Id
+            };
+        }
         [HttpPost]
         public async Task<AuthenticateResultModel> AuthenticateForApp([FromBody] PhoneAuthenticateModel model)
         {

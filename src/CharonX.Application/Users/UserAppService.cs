@@ -82,7 +82,7 @@ namespace CharonX.Users
         {
             CheckCreatePermission();
 
-            var user = ObjectMapper.Map<User>(input);
+            var user = MapToEntity(input);
 
             user.TenantId = AbpSession.TenantId;
             user.IsEmailConfirmed = true;
@@ -412,6 +412,10 @@ namespace CharonX.Users
         {
             var user = ObjectMapper.Map<User>(createInput);
             user.SetNormalizedNames();
+            if (user.Surname.IsNullOrEmpty())
+            {
+                user.Surname = user.UserName;
+            }
             return user;
         }
 

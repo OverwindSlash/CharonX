@@ -47,14 +47,15 @@ namespace CharonX.Users.Dto
         [MaxLength(10)]
         public string City { get; set; }
 
-        //[Required]
+        [Required]
         [EmailAddress]
         [StringLength(AbpUserBase.MaxEmailAddressLength)]
-        public string EmailAddress
-        {
-            get => string.IsNullOrEmpty(_emailAddress) ? (PhoneNumber + EmailDomain) : _emailAddress;
-            set => _emailAddress = value;
-        }
+        public string EmailAddress { get; set; }
+        //public string EmailAddress
+        //{
+        //    get => string.IsNullOrEmpty(_emailAddress) ? (PhoneNumber + EmailDomain) : _emailAddress;
+        //    set => _emailAddress = value;
+        //}
 
         public bool IsActive { get; set; }
 
