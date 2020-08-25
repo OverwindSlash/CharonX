@@ -28,7 +28,8 @@ namespace CharonX.EntityFrameworkCore.Seed.Host
                 new ApplicationLanguage(tenantId, "zh-Hans", "简体中文", "famfamfam-flags cn"),
                 new ApplicationLanguage(tenantId, "es-MX", "Español México", "famfamfam-flags mx"),
                 new ApplicationLanguage(tenantId, "nl", "Nederlands", "famfamfam-flags nl"),
-                new ApplicationLanguage(tenantId, "ja", "日本語", "famfamfam-flags jp")
+                new ApplicationLanguage(tenantId, "ja", "日本語", "famfamfam-flags jp"),
+                new ApplicationLanguage(tenantId,"zh-CN","中文","famfamfam-flags cn")
             };
         }
 

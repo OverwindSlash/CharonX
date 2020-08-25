@@ -119,11 +119,11 @@ namespace CharonX.Web.Host.Startup
 
             app.UseAuthentication();
 
-            var cultureInfo = new CultureInfo("zh-Hans");
-            CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-            CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+            //var cultureInfo = new CultureInfo("zh-Hans");
+            //CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+            //CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-            //app.UseAbpRequestLocalization();
+            app.UseAbpRequestLocalization();
 
             app.UseEndpoints(endpoints =>
             {

@@ -105,7 +105,7 @@ namespace CharonX.Tests.Users
 
             var getUser1Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
             getUser1Dto.FullName.ShouldBe("John Smith");
-            getUser1Dto.IsAdmin.ShouldBeFalse();
+            getUser1Dto.IsAdmin?.ShouldBeFalse();
 
             try
             {
@@ -149,7 +149,7 @@ namespace CharonX.Tests.Users
 
             var getUser1Dto = await _omUserAppService.GetUserInTenantAsync(tenantDto.Id, new EntityDto<long>(userDto.Id));
             getUser1Dto.FullName.ShouldBe("John Smith");
-            getUser1Dto.IsAdmin.ShouldBeTrue();
+            getUser1Dto.IsAdmin?.ShouldBeTrue();
             getUser1Dto.OrgUnitNames[0].ShouldBe("AdminGroup");
             getUser1Dto.RoleNames[0].ShouldBe("Admin");
         }
