@@ -5,7 +5,7 @@ WORKDIR /app
 EXPOSE 80
 
 #FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
-FROM aspdotnet-base:beta AS build
+FROM 10.10.1.221:8086/library/aspdotnet-base AS build
 #此处异常尴尬：公司网络问题导致不能restore,我在家做aspdotnet-base镜像时忘记删除其中的src,该image已传到公司harbor，不想再更换
 RUN rm -rf /src
 WORKDIR /src
