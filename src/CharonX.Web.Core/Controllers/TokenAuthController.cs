@@ -221,6 +221,98 @@ namespace CharonX.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<AuthenticateResultModel> AuthenticateWithSmsForApp([FromBody] SmsAuthenticateModel model)
+        {
+            string username = string.Empty;
+            string tenantName = string.Empty;
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+                if (user == null)
+                {
+                    throw new AppUserFriendlyException(L("PhoneNumberNotExist", model.PhoneNumber));
+                }
+                username = user.UserName;
+
+                if (user.TenantId.HasValue)
+                {
+                    tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
+                }
+            }
+            try
+            {
+                var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
+                if (!await AuthenticateSmsCode(model.PhoneNumber, model.SmsAuthCode))
+                {
+                    throw new AppUserFriendlyException(L("WrongSmsAuthCode"));
+                }
+
+                int? tenantId = null;
+                if (loginResult.Tenant != null)
+                {
+                    tenantId = loginResult.Tenant.Id;
+                }
+
+                var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+                return new AuthenticateResultModel
+                {
+                    AccessToken = accessToken,
+                    EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                    ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+                    UserId = loginResult.User.Id
+                };
+            }
+            catch (UserFriendlyException e)
+            {
+                throw new AppUserFriendlyException(message: e.Message, details: e.Details);
+            }
+        }
+        [HttpPost]
+        public async Task<AuthenticateResultModel> AuthenticateByEmailForApp([FromBody] EmailAuthenticateModel model)
+        {
+            string username = string.Empty;
+            string tenantName = string.Empty;
+            using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
+            {
+                var user = await _repository.GetAll().FirstOrDefaultAsync(u => u.EmailAddress == model.EmailAdress);
+                if (user == null)
+                {
+                    throw new AppUserFriendlyException(L("EmailAdressNotExist", model.EmailAdress));
+                }
+                username = user.UserName;
+
+                if (user.TenantId.HasValue)
+                {
+                    tenantName = this._tenantCache.Get(user.TenantId.Value).TenancyName;
+                }
+            }
+            try
+            {
+                var loginResult = await GetLoginResultAsync(username, model.Password, tenantName);
+
+                int? tenantId = null;
+                if (loginResult.Tenant != null)
+                {
+                    tenantId = loginResult.Tenant.Id;
+                }
+
+                var accessToken = CreateAccessToken(CreateJwtClaims(loginResult.Identity, tenantId));
+
+                return new AuthenticateResultModel
+                {
+                    AccessToken = accessToken,
+                    EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                    ExpireInSeconds = (int)_configuration.Expiration.TotalSeconds,
+                    UserId = loginResult.User.Id
+                };
+            }
+            catch (UserFriendlyException e)
+            {
+                throw new AppUserFriendlyException(message: e.Message, details: e.Details);
+            }
+        }
         [HttpGet]
         public async Task GetSmsAuthenticationCode(string phoneNumber)
         {
