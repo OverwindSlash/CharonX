@@ -107,19 +107,19 @@
     <text name="UserNotFound">User {0} not found.</text>
     <text name="OrgUnitNotFound">Organization Unit {0} not found.</text>
     <text name="TenantDeleteWarningMessage">Tenant {0} will be deleted.</text>
-    <text name="PhoneNumberDuplicated">Phone number {0} duplicated.</text>
-    <text name="InvalidPhoneNumber">Invalid phone number: {0}.</text>
-    <text name="PhoneNumberNotExist">Phone number: {0} not exist.</text>
+    <text name="PhoneNumberDuplicated">Phone number {0} already exists.</text>
+    <text name="InvalidPhoneNumber">Incorrect phone number: {0}.</text>
+    <text name="PhoneNumberNotExist">Phone number: {0} does not exist.</text>
     <text name="WrongSmsAuthCode">Sms authentication code not correct!</text>
-    <text name="EmailAddressDuplicated">Email address {0} duplicated.</text>
-    <text name="InvalidEmailAddress">Invalid email address: {0}.</text>
-    <text name="NeedLoginAsTenantAdmin">Please log in as tenant administrator before attempting to reset password.</text>
-    <text name="ExistingPasswordWrong">Your 'Existing Password' did not match the one on record.  Please try again or contact an administrator for assistance in resetting your password.</text>
+    <text name="EmailAddressDuplicated">Email address {0} already exists.</text>
+    <text name="InvalidEmailAddress">Incorrect email address: {0}.</text>
+    <text name="NeedLoginAsTenantAdmin">Only administrators can reset the password.</text>
+    <text name="ExistingPasswordWrong">Existing password incorrect, please contact the administrator to reset the password.</text>
     <text name="SearchWithThreeDot">Search...</text>
-    <text name="SmartSecurityFeature">Smart security feature</text>
-    <text name="SmartPassFeature">Smart pass feature</text>
-    <text name="UserExpired">The user has been expired at {0}</text>
-    <text name="EmailAdressNotExist">Your email address does not exist</text>
+    <text name="SmartSecurityFeature">Function kit of intelligent security</text>
+    <text name="SmartPassFeature">Function kit of intelligent access</text>
+    <text name="UserExpired">The user already expired on {0}</text>
+    <text name="EmailAdressNotExist">The email address entered does not exist</text>
 
   </texts>
 </localizationDictionary>
