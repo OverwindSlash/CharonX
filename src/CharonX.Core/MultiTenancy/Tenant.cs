@@ -33,7 +33,7 @@ namespace CharonX.MultiTenancy
 
         [StringLength(MaxLogoNodeLength)]
         public string LogoNode { get; set; }
-
+        public int DistrictId { get; set; }
         public Tenant()
         {            
         }

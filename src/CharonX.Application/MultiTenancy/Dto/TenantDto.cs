@@ -36,6 +36,7 @@ namespace CharonX.MultiTenancy.Dto
 
         [StringLength(Tenant.MaxLogoNodeLength)]
         public string LogoNode { get; set; }
+        public int DistrictId { get; set; }
 
         public bool IsActive { get; set; }
 

@@ -95,7 +95,13 @@ namespace CharonX
             tokenAuthConfig.Issuer = _appConfiguration["Authentication:JwtBearer:Issuer"];
             tokenAuthConfig.Audience = _appConfiguration["Authentication:JwtBearer:Audience"];
             tokenAuthConfig.SigningCredentials = new SigningCredentials(tokenAuthConfig.SecurityKey, SecurityAlgorithms.HmacSha256);
-            tokenAuthConfig.Expiration = TimeSpan.FromDays(1);
+            var expireDaysStr = _appConfiguration.GetSection("Authentication").GetSection("JwtBearer")["ExpireDays"];
+            double expireDays = 1;
+            if (double.TryParse(expireDaysStr, out var result))
+            {
+                expireDays = result;
+            }
+            tokenAuthConfig.Expiration = TimeSpan.FromDays(expireDays);
         }
 
         public override void Initialize()
