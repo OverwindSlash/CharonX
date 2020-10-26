@@ -101,7 +101,7 @@ namespace CharonX
             {
                 expireDays = result;
             }
-            tokenAuthConfig.Expiration = TimeSpan.FromDays(expireDays);
+            tokenAuthConfig.Expiration = TimeSpan.FromDays(31);
         }
 
         public override void Initialize()
